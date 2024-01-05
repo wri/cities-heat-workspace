@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "test_study_area",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "fid": 12, "element_type": "way", "osmid": 317787177, "name": "Bansidhar Garden", "width": 0.021359, "height": 0.013397, "area": 0.000286, "perimeter": 0.069511 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5385752, 22.9994941 ], [ 72.5599337, 22.9994941 ], [ 72.5599337, 23.0128911 ], [ 72.5385752, 23.0128911 ], [ 72.5385752, 22.9994941 ] ] ] } }
+]
+}
