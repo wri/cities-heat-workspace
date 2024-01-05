@@ -1,0 +1,16 @@
+{
+"type": "FeatureCollection",
+"name": "test_parks",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "fid": 12, "element_type": "way", "osmid": 317787177, "name": "Bansidhar Garden" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5537951, 23.0004235 ], [ 72.5542728, 22.9994941 ], [ 72.5553169, 22.999961 ], [ 72.5548096, 23.0009267 ], [ 72.5537951, 23.0004235 ] ] ] } },
+{ "type": "Feature", "properties": { "fid": 17, "element_type": "way", "osmid": 330926672, "name": "Sukhipura Park" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5510489, 23.0128911 ], [ 72.5521408, 23.0128812 ], [ 72.552172, 23.0122063 ], [ 72.5513303, 23.0121831 ], [ 72.5510243, 23.0121714 ], [ 72.5510489, 23.0128911 ] ] ] } },
+{ "type": "Feature", "properties": { "fid": 75, "element_type": "way", "osmid": 367427547, "name": null }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5450631, 23.0034108 ], [ 72.5460683, 23.0038395 ], [ 72.5463825, 23.0032152 ], [ 72.5452592, 23.002974 ], [ 72.5450631, 23.0034108 ] ] ] } },
+{ "type": "Feature", "properties": { "fid": 118, "element_type": "way", "osmid": 472446481, "name": "Malav Talav" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5389887, 23.0075423 ], [ 72.5389856, 23.0073213 ], [ 72.5385752, 23.0070892 ], [ 72.539073, 23.0060113 ], [ 72.5391403, 23.0058609 ], [ 72.5407585, 23.0069425 ], [ 72.5401047, 23.0078849 ], [ 72.5390397, 23.0075579 ], [ 72.5389887, 23.0075423 ] ] ] } },
+{ "type": "Feature", "properties": { "fid": 163, "element_type": "way", "osmid": 1008895292, "name": "Dhanvantari Garden" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5585738, 23.0037105 ], [ 72.5597057, 23.0041833 ], [ 72.5599337, 23.0035402 ], [ 72.5588742, 23.0030637 ], [ 72.5585738, 23.0037105 ] ] ] } },
+{ "type": "Feature", "properties": { "fid": 165, "element_type": "way", "osmid": 1019202194, "name": "Harenbhai Viththalbhai Pandya Udhyan" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5441329, 23.0082874 ], [ 72.5440966, 23.008389 ], [ 72.5449884, 23.0086779 ], [ 72.5452553, 23.0080187 ], [ 72.5447551, 23.0078631 ], [ 72.544346, 23.0077163 ], [ 72.5441329, 23.0082874 ] ] ] } },
+{ "type": "Feature", "properties": { "fid": 166, "element_type": "way", "osmid": 1019202197, "name": "Shardanagar Park" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5502576, 23.0103301 ], [ 72.5504491, 23.0103732 ], [ 72.5505047, 23.0103857 ], [ 72.5506304, 23.009958 ], [ 72.5503971, 23.0098956 ], [ 72.5502576, 23.0103301 ] ] ] } },
+{ "type": "Feature", "properties": { "fid": 167, "element_type": "way", "osmid": 1019202205, "name": "Popatlal Chhotalal Dani Udhyan" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5427223, 23.0119423 ], [ 72.5427209, 23.0119476 ], [ 72.5426976, 23.0120333 ], [ 72.5433743, 23.0121886 ], [ 72.5434666, 23.0118478 ], [ 72.54279, 23.0116925 ], [ 72.5427223, 23.0119423 ] ] ] } },
+{ "type": "Feature", "properties": { "fid": 189, "element_type": "way", "osmid": 1199739136, "name": "Senior Citizen Park" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 72.5471611, 23.0074534 ], [ 72.5476354, 23.0076432 ], [ 72.5479059, 23.0070707 ], [ 72.5474316, 23.0068808 ], [ 72.5471611, 23.0074534 ] ] ] } }
+]
+}
