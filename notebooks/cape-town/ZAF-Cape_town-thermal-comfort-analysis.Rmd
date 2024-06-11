@@ -1,0 +1,140 @@
+---
+title: "Thermal comfort analysis of Cape Town, South Africa"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(tidyverse)
+library(terra)
+library(tidyterra)
+library(rgee)
+library(sf)
+library(here)
+```
+
+This notebook documents the thermal comfort analysis for an area of interest in downtown Cape Town.
+
+# Load datasets
+
+MRT, shadow, and boundary data were downloaded from the [wri-cities-heat bucket in AWS](https://us-east-1.console.aws.amazon.com/s3/buckets/wri-cities-heat?prefix=ZAF-Cape_town/&region=us-east-1&bucketType=general). LULC was downloaded from [GEE](https://code.earthengine.google.com/?asset=projects/wri-datalab/cities/SSC/LULC_V2). Mean summertime (Dec, Jan, Feb) LST was calculated and downloaded from [GEE](https://code.earthengine.google.com/61495c5b32e5f4a86f2e5e3114618f15).
+
+```{r}
+mrt <- rast(here("data", 
+                 "ZAF-Cape_town", 
+                 "processed", 
+                 "solweig", 
+                 "Tmrt_2022_22_1400D.tif")) %>% 
+  rename(MRT = Tmrt_2022_22_1400D) 
+
+shadow <- rast(here("data", 
+                    "ZAF-Cape_town", 
+                    "processed", 
+                    "solweig", 
+                    "Shadow_2022_22_1400D.tif")) %>% 
+  rename(Shadow = Shadow_2022_22_1400D) 
+shadow <- shadow * 10
+shadow <- shadow %>% 
+  as.factor()
+
+boundary <- st_read(here("data", 
+                         "ZAF-Cape_town", 
+                         "processed", 
+                         "area_of_interest.geojson"))
+
+lulc <- rast(here("data", 
+                  "ZAF-Cape_town", 
+                  "processed", 
+                  "ZAF-Cape_town-LULCV2.tif")) %>% 
+  as.factor()
+
+lulc.solweig <- rast(here("data", 
+                  "ZAF-Cape_town", 
+                  "processed", 
+                  "landcover_nozero.tif")) %>% 
+  as.factor()
+
+lst <- rast(here("data", 
+                 "ZAF-Cape_town", 
+                 "processed", 
+                 "ZAF-Cape_town-LST-summer2021-22.tif"))
+```
+
+# Mean radiant temperature
+
+```{r}
+ggplot() +
+  geom_sf(data = boundary, fill = NA) +
+  geom_spatraster(data = mrt) +
+  scale_fill_whitebox_c(
+    palette = "soft",
+    labels = scales::label_number(suffix = "º"),
+    n.breaks = 8,
+    guide = guide_legend(reverse = TRUE, title = "MRT")) +
+  ggtitle("Mean radiant temperature, Cape Town City Centre")
+
+mrt %>% 
+  as_tibble() %>% 
+ggplot() +
+  geom_density(aes(MRT)) +
+  labs(title = "Distribution of MRT, 24 January 2022",
+       subtitle = "Cape Town City Centre")
+```
+
+# Land surface temperature
+
+```{r}
+ggplot() +
+  geom_sf(data = boundary, fill = NA) +
+  geom_spatraster(data = lst) +
+  scale_fill_whitebox_c(
+    palette = "soft",
+    labels = scales::label_number(suffix = "º"),
+    n.breaks = 8,
+    guide = guide_legend(reverse = TRUE, title = "LST")) +
+  labs(title = "Mean summertime land surface temperature, Cape Town City Centre",
+       subtitle = "Dec 2021, Jan 2022, Feb 2022")
+
+lst %>% 
+  as_tibble() %>% 
+ggplot() +
+  geom_density(aes(LST)) +
+  labs(title = "Density of summertime (2021-22) LST",
+       subtitle = "Cape Town City Centre")
+```
+# Shade
+
+```{r}
+ggplot() +
+  geom_sf(data = boundary, fill = NA) +
+  geom_spatraster(data = shadow) +
+  scale_fill_manual(values = c("#765341", "#0B6623", "#FFFFFF"),
+                    labels = c("Building", "Tree", "None"),
+                    name = "Shade",
+                    na.value = "transparent") +
+  labs(title = "Shade, Cape Town City Centre",
+       subtitle = "14:00 local time")
+
+shadow %>% 
+  as_tibble() %>% 
+ggplot() +
+  geom_bar(aes(Shadow, fill = Shadow)) +
+  scale_fill_manual(values = c("#765341", "#0B6623", "#FFFFFF"),
+                    labels = c("Building", "Tree", "None"),
+                    name = "Shade",
+                    na.value = "transparent") +
+  labs(title = "Shaded area at 14:00 local time",
+       subtitle = "Cape Town City Centre") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+```
+
+# MRT by LULC
+
+```{r}
+mrt.lulc <- zonal(mrt, lulc.solweig)
+mrt.lulc
+```
+
