@@ -6,6 +6,12 @@ import numpy as np
 import fiona
 import pyproj
 
+import os
+
+os.environ["PROJ_LIB"] = r"C:\Users\www\PycharmProjects\Amsterdam_ctcm\venv\Lib\site-packages\rasterio\proj_data"
+
+print(os.environ.get('PROJ_LIB'))
+
 def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1):
     """
     Preprocesses and rasterizes a GeoPackage (GPKG) file into a raster file.
