@@ -1,7 +1,7 @@
 from reproj_vector import crop_reproj_vector
 from rasterize_gpkg import rasterize_gpkg
 from smooth_dem import smooth_dem
-from combine_dem_building_tifs import combine_dem_and_building
+from combine_dem_building_tifs import combine_dem_and_building, align_and_crop_dem_to_building
 
 def create_global_building_dem():
     utglobus_path = ''
@@ -26,4 +26,5 @@ def create_global_building_dem():
     dem_smoothed = smooth_dem(input_nasadem, output_nasadem_smoothed, sigma=1)
 
     output_global_building_dem = ''
+    align_and_crop_dem_to_building(dem_path, building_path, output_tif_path)
     combine_dem_and_building(dem_smoothed, utbuilding_tif_path, output_global_building_dem)

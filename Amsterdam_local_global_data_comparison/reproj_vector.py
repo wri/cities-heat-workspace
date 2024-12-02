@@ -2,7 +2,7 @@ import geopandas as gpd
 from shapely.geometry import box
 from pyproj import Transformer
 
-# Load the GeoPackage (replace 'input.gpkg' with the actual file path)
+
 # input_gpkg = r'C:\Users\www\PycharmProjects\Height_Ams\data\3dglobpf_vector_updated.gpkg'
 # output_gpkg = r'C:\Users\www\WRI-cif\Validation_height\4326transform\3dglobpf_4326.gpkg'
 

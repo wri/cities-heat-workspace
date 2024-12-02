@@ -13,17 +13,28 @@ def align_and_crop_dem_to_building(dem_path, building_path, output_tif_path):
     with rasterio.open(building_path) as building:
         building_bounds = building.bounds
         building_transform = building.transform
+        building_crs = building.crs
         building_shape = (building.height, building.width)
         building_profile = building.profile
 
     with rasterio.open(dem_path) as dem:
-        # Read the nodata value from the DEM
+        dem_bounds = dem.bounds
+        dem_transform = dem.transform
+        dem_crs = dem.crs
         dem_nodata = dem.nodata
 
-        # Calculate the transformation and resampling for the DEM to match the building
+        # Check if DEM and building layer already match
+        if (dem_bounds == building_bounds and
+                np.isclose(dem_transform[0], building_transform[0]) and
+                np.isclose(dem_transform[4], building_transform[4]) and
+                dem_crs == building_crs):
+            print("DEM already matches the building layer's bounding box, resolution, and CRS.")
+            return dem.read(1), dem.profile, dem_nodata
+
+        # Otherwise, reproject and crop the DEM
+        print("Reprojecting and cropping DEM to match the building layer.")
         transform, width, height = calculate_default_transform(
-            dem.crs, building_profile['crs'], building_shape[1], building_shape[0],
-            *building_bounds
+            dem_crs, building_crs, building_shape[1], building_shape[0], *building_bounds
         )
 
         # Define a new profile with updated transform and size
@@ -31,7 +42,8 @@ def align_and_crop_dem_to_building(dem_path, building_path, output_tif_path):
         profile.update({
             'transform': transform,
             'width': width,
-            'height': height
+            'height': height,
+            'crs': building_crs
         })
 
         # Resample and crop the DEM to match the building extent
@@ -39,12 +51,14 @@ def align_and_crop_dem_to_building(dem_path, building_path, output_tif_path):
         reproject(
             source=rasterio.band(dem, 1),
             destination=aligned_dem_data,
-            src_transform=dem.transform,
-            src_crs=dem.crs,
+            src_transform=dem_transform,
+            src_crs=dem_crs,
             dst_transform=transform,
-            dst_crs=building_profile['crs'],
+            dst_crs=building_crs,
             resampling=Resampling.bilinear
         )
+
+        # Save the aligned and cropped DEM
         with rasterio.open(output_tif_path, 'w', **profile) as dst:
             dst.write(aligned_dem_data, 1)
 
@@ -52,15 +66,24 @@ def align_and_crop_dem_to_building(dem_path, building_path, output_tif_path):
     return aligned_dem_data, profile, dem_nodata
 
 
-def fill_missing_values_with_idw(dem_data, dem_nodata):
+def fill_missing_values_with_idw(dem_data, dem_nodata, output_file, original_profile):
     """
-    Fill missing values in DEM using Inverse Distance Weighting (IDW) interpolation.
+    Fill missing values in DEM using Inverse Distance Weighting (IDW) interpolation and save the result to a file.
+
+    Parameters:
+    - dem_data (np.ndarray): The DEM data with missing values.
+    - dem_nodata (float): The nodata value in the DEM.
+    - output_file (str): Path to save the filled DEM.
+    - original_profile (dict): The raster profile from the original DEM.
+
+    Returns:
+    - str: Path to the saved filled DEM file.
     """
-    # Create a mask for missing values using the nodata value from the DEM
+    # Replace nodata values with NaN
     if dem_nodata is not None and dem_nodata != np.nan:
         dem_data = np.where(dem_data == dem_nodata, np.nan, dem_data)
 
-        # Create a mask for missing values (NaN)
+    # Create a mask for missing values (NaN)
     mask = np.isnan(dem_data)
 
     # Debug: Check mask stats
@@ -73,52 +96,64 @@ def fill_missing_values_with_idw(dem_data, dem_nodata):
 
     missing_y, missing_x = np.where(mask)
 
-    # Debug: Check coordinates
-    print("Known Values Stats:")
-    print(f"Known Points Count: {len(known_values)}")
-    print(f"Known Points Sample: {known_values[:10]} (if available)")
-    print("Missing Values Stats:")
-    print(f"Missing Points Count: {len(missing_y)}")
-
     # Check if there are no missing values
     if len(missing_y) == 0:
-        print("No missing values to fill. Returning original DEM.")
-        return dem_data
+        print("No missing values to fill. Saving original DEM to file.")
+        dem_filled = dem_data  # No filling needed
+    else:
+        # Perform IDW interpolation for missing values
+        try:
+            dem_filled = griddata(
+                points=(known_x, known_y),
+                values=known_values,
+                xi=np.mgrid[0:dem_data.shape[0], 0:dem_data.shape[1]],
+                method='nearest'
+            )
+        except Exception as e:
+            print("Error during IDW interpolation:", e)
+            return None
 
-    # Create a grid of all coordinates
-    grid_y, grid_x = np.mgrid[0:dem_data.shape[0], 0:dem_data.shape[1]]
+    # Update the profile for saving the filled DEM
+    profile = original_profile.copy()
+    profile.update(dtype='float32', nodata=np.nan)
 
-    # Perform IDW interpolation for missing values
-    try:
-        dem_filled = griddata(
-            points=(known_x, known_y),
-            values=known_values,
-            xi=(grid_x, grid_y),
-            method='nearest'
-        )
-    except Exception as e:
-        print("Error during IDW interpolation:", e)
-        return dem_data
+    # Save the filled DEM to a GeoTIFF file
+    with rasterio.open(output_file, 'w', **profile) as dst:
+        dst.write(dem_filled, 1)
 
-    # Debug: Check if dem_filled contains NaNs
-    print("DEM Filled Stats:")
-    print(f"Filled DEM NaN Count: {np.isnan(dem_filled).sum()}")
-
-    return dem_filled
+    print(f"Filled DEM saved to {output_file}")
+    return output_file
 
 
-def combine_dem_and_building(dem_filled, building_path, output_path):
+def combine_dem_and_building(dem_filled_path, building_path, output_path):
     """
     Add building heights on top of the DEM.
+
+    Parameters:
+    - dem_filled_path (str): Path to the DEM file with missing values filled.
+    - building_path (str): Path to the building raster file.
+    - output_path (str): Path to save the combined raster file.
+
+    Returns:
+    - str: Path to the saved combined DEM + building raster.
     """
+    # Read the DEM file
+    with rasterio.open(dem_filled_path) as dem_filled_src:
+        dem_filled = dem_filled_src.read(1).astype(np.float32)  # Ensure numeric type
+        dem_profile = dem_filled_src.profile
+
+    # Read the building raster
     with rasterio.open(building_path) as building:
-        building_data = building.read(1)
-        profile = building.profile  # Move profile access within the 'with' block
+        building_data = building.read(1).astype(np.float32)  # Ensure numeric type
+        profile = building.profile
 
     # Combine DEM and building layers, giving preference to building data
     combined_dem = np.where(building_data > 0, dem_filled + building_data, dem_filled)
 
-    # Save combined DEM + building layer
+    # Update profile for the output raster
+    profile.update(dtype='float32', nodata=0)
+
+    # Save the combined DEM + building layer
     with rasterio.open(output_path, 'w', **profile) as dst:
         dst.write(combined_dem, 1)
 
@@ -236,18 +271,18 @@ def process_divided_patches(dem1_path, dem2_path, building1_path, building2_path
 
     return combined_path
 
-process_divided_patches(
-    dem1_path=r'C:\Users\www\WRI-cif\Amsterdam\DEM_patch1.TIF',
-    dem2_path=r'C:\Users\www\WRI-cif\Amsterdam\2023_M_25EZ1.TIF',
-    building1_path=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_aoi2_p1.tif",
-    building2_path=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_aoi2_p2.tif",
-    output_dem_p1=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\dem_aoi2_p1.tif",
-    output_dem_p2=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\dem_aoi2_p2.tif",
-    output_dem_not_filled = r"C:\Users\www\WRI\dontwrite",
-    output_filled_path=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\dem_f_aoi2.tif",
-    building_path = r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_m_aoi2.tif",
-    combined_output_path=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\dem_building_aoi2.tif"
-)
+# process_divided_patches(
+#     dem1_path=r'C:\Users\www\WRI-cif\Amsterdam\DEM_patch1.TIF',
+#     dem2_path=r'C:\Users\www\WRI-cif\Amsterdam\2023_M_25EZ1.TIF',
+#     building1_path=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_aoi2_p1.tif",
+#     building2_path=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_aoi2_p2.tif",
+#     output_dem_p1=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\dem_aoi2_p1.tif",
+#     output_dem_p2=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\dem_aoi2_p2.tif",
+#     output_dem_not_filled = r"C:\Users\www\WRI\dontwrite",
+#     output_filled_path=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\dem_f_aoi2.tif",
+#     building_path = r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_m_aoi2.tif",
+#     combined_output_path=r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\dem_building_aoi2.tif"
+# )
 # # Specify file paths
 # dem_path = r'C:\Users\www\WRI-cif\Amsterdam\DEM_patch1.TIF'
 # building_path = r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_aoi2_p1.tif"
@@ -264,3 +299,5 @@ process_divided_patches(
 # print("Final combined DEM and building saved at:", final_output)
 
 
+align_and_crop_dem_to_building(r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\NasaDEM_smoothed.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_AOI1.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\NASADEM_AOI1_s_c.tif')
+combine_dem_and_building(r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\NASADEM_AOI1_s_c.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_AOI1.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_NASADEM_AOI1.tif')

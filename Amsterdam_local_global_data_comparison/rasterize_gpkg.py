@@ -8,11 +8,12 @@ import pyproj
 
 import os
 
-os.environ["PROJ_LIB"] = r"C:\Users\www\PycharmProjects\Amsterdam_ctcm\venv\Lib\site-packages\rasterio\proj_data"
+# os.environ["PROJ_LIB"] = r"C:\Users\www\PycharmProjects\Amsterdam_ctcm\venv\Lib\site-packages\rasterio\proj_data"
 
 print(os.environ.get('PROJ_LIB'))
 
-def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1):
+
+def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1, value_column="height"):
     """
     Preprocesses and rasterizes a GeoPackage (GPKG) file into a raster file.
 
@@ -21,11 +22,12 @@ def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1):
     - output_file (str): Path to the output raster file.
     - aoi_file (str): Path to the AOI GPKG file for cropping and CRS transformation.
     - resolution (float): Resolution of the output raster in the same units as the AOI CRS (default is 1).
+    - value_column (str): Column name in the GeoPackage whose values will be used for rasterization.
 
     Returns:
     - str: Path to the rasterized TIFF file.
     """
-    # Load the AOI GeoPackage
+    # Load the AOI GeoPackage using Geopandas
     aoi_gdf = gpd.read_file(aoi_file)
 
     if aoi_gdf.empty:
@@ -35,7 +37,7 @@ def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1):
     aoi_bounds = aoi_gdf.total_bounds  # [minx, miny, maxx, maxy]
     aoi_crs = aoi_gdf.crs
 
-    # Load the input GeoPackage
+    # Load the input GeoPackage using Geopandas
     input_gdf = gpd.read_file(input_file)
 
     if input_gdf.empty:
@@ -51,14 +53,22 @@ def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1):
     if cropped_gdf.empty:
         raise ValueError("No features remain after cropping to the AOI.")
 
+    # Ensure the value column exists
+    if value_column not in cropped_gdf.columns:
+        raise ValueError(f"The column '{value_column}' does not exist in the GeoPackage.")
+
     # Define the raster bounds and dimensions
     minx, miny, maxx, maxy = aoi_bounds
     width = int((maxx - minx) / resolution)
     height = int((maxy - miny) / resolution)
     transform = from_origin(minx, maxy, resolution, resolution)
 
-    # Prepare shapes for rasterization
-    shapes = [(geom, 1) for geom in cropped_gdf.geometry if geom is not None]
+    # Prepare shapes for rasterization with values from the specified column
+    shapes = [
+        (geom, value)
+        for geom, value in zip(cropped_gdf.geometry, cropped_gdf[value_column])
+        if geom is not None
+    ]
 
     # Rasterize the data
     raster = rasterize(
@@ -67,7 +77,7 @@ def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1):
         transform=transform,
         fill=0,  # Background value
         all_touched=True,
-        dtype='uint8'
+        dtype='float32'
     )
 
     # Write the raster to a GeoTIFF file
@@ -78,7 +88,7 @@ def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1):
             height=height,
             width=width,
             count=1,
-            dtype='uint8',
+            dtype='float32',
             crs=aoi_crs.to_string(),
             transform=transform,
             nodata=0
@@ -89,9 +99,12 @@ def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1):
 
     return output_file
 
-input_gpkg = r"C:\Users\www\WRI-cif\GLOBAL_COM\UT_Amsterdam.gpkg"
-aoi_gpkg = r"C:\Users\www\WRI-cif\GLOBAL_COM\AOI_2_utm.gpkg"
-output_tif = r"C:\Users\www\WRI-cif\GLOBAL_COM\UT_raster_AOI2.tif"
+input_gpkg = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\UT_Amsterdam.gpkg"
+aoi_gpkg = r"https://wri-cities-heat.s3.us-east-1.amazonaws.com/NLD-Amsterdam/AOI_1_utm.gpkg"
+output_tif = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_AOI1.tif"
 resolution = 1
 
 rasterize_gpkg(input_gpkg, output_tif, aoi_gpkg, resolution)
+
+
+#aoi1: https://wri-cities-heat.s3.us-east-1.amazonaws.com/NLD-Amsterdam/AOI_1_utm.gpkg
