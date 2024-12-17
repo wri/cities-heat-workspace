@@ -220,8 +220,8 @@ def process_shade_maps(main_folder, output_excel, edge_buffer=500):
     save_results_to_excel(output_excel, results)
 
 
-process_shade_maps(
-    main_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results",
-    output_excel=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\shade_2.xlsx",
-    edge_buffer=500
-)
+# process_shade_maps(
+#     main_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results",
+#     output_excel=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\shade_test.xlsx",
+#     edge_buffer=500
+# )
