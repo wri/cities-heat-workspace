@@ -167,7 +167,83 @@ def save_results_to_excel(file_path, results):
 #     save_results_to_excel(csv_path, run_name, result)
 
 
-def process_shade_maps(main_folder, output_excel, edge_buffer=500):
+def save_results_to_excel(file_path, results, baseline_subfolder=None):
+    """
+    Save or update shade analysis results in an Excel file, with added calculations and formatting.
+
+    Parameters:
+        file_path (str): Path to the Excel file.
+        results (list of dict): List of results containing shade areas.
+        baseline_subfolder (str, optional): Subfolder name to use as a baseline for percentage difference calculations.
+
+    Returns:
+        None
+    """
+    # Convert results to a DataFrame
+    df = pd.DataFrame(results)
+
+    # Ensure `run_name` is the first column
+    df = df[['run_name'] + [col for col in df.columns if col != 'run_name']]
+
+    # Add total area column
+    df['total_area_m2'] = (
+        df['building_shade_area_m2'] +
+        df['tree_shade_area_m2'] +
+        df['no_shade_area_m2']
+    )
+
+    # Add percentage of shade columns
+    df['building_shade_percentage'] = (df['building_shade_area_m2'] / df['total_area_m2']) * 100
+    df['tree_shade_percentage'] = (df['tree_shade_area_m2'] / df['total_area_m2']) * 100
+    df['no_shade_percentage'] = (df['no_shade_area_m2'] / df['total_area_m2']) * 100
+
+    # Sort results by time (12, 15, 18)
+    df['time'] = df['run_name'].str.extract(r'_(\d+)$').astype(int)  # Extract time from run_name
+    df = df.sort_values(by='time').drop(columns=['time'])
+
+    # Calculate percentage differences for each time using the baseline subfolder
+    if baseline_subfolder:
+        baseline_results = df[df['run_name'].str.startswith(baseline_subfolder)]
+        for time in [12, 15, 18]:
+            baseline_row = baseline_results[baseline_results['run_name'].str.endswith(f"_{time}")]
+            if not baseline_row.empty:
+                baseline_building_percentage = baseline_row['building_shade_percentage'].values[0]
+                baseline_tree_percentage = baseline_row['tree_shade_percentage'].values[0]
+                baseline_no_percentage = baseline_row['no_shade_percentage'].values[0]
+
+                # Mask for rows corresponding to the same time
+                mask = df['run_name'].str.endswith(f"_{time}")
+
+                # Calculate differences
+                df.loc[mask, 'building_shade_diff_from_baseline'] = (
+                    df.loc[mask, 'building_shade_percentage'] - baseline_building_percentage
+                )
+                df.loc[mask, 'tree_shade_diff_from_baseline'] = (
+                    df.loc[mask, 'tree_shade_percentage'] - baseline_tree_percentage
+                )
+                df.loc[mask, 'no_shade_diff_from_baseline'] = (
+                    df.loc[mask, 'no_shade_percentage'] - baseline_no_percentage
+                )
+            else:
+                print(f"Baseline run for time {time} not found in {baseline_subfolder}.")
+                df['building_shade_diff_from_baseline'] = np.nan
+                df['tree_shade_diff_from_baseline'] = np.nan
+                df['no_shade_diff_from_baseline'] = np.nan
+    else:
+        df['building_shade_diff_from_baseline'] = np.nan
+        df['tree_shade_diff_from_baseline'] = np.nan
+        df['no_shade_diff_from_baseline'] = np.nan
+
+    # Save or update the Excel file
+    if os.path.exists(file_path):
+        existing_data = pd.read_excel(file_path)
+        df = pd.concat([existing_data, df], ignore_index=True)
+
+    df.to_excel(file_path, index=False)
+    print(f"Results successfully saved to {file_path}")
+
+
+def process_shade_maps(main_folder, output_excel, edge_buffer=500, baseline_subfolder=None):
     """
     Process shade maps from subfolders, crop them according to a calculated BBX,
     analyze shade areas, and save the results to an Excel file.
@@ -176,6 +252,7 @@ def process_shade_maps(main_folder, output_excel, edge_buffer=500):
         main_folder (str): Path to the main folder containing subfolders with shade maps.
         output_excel (str): Path to save the Excel file with results.
         edge_buffer (int): Buffer distance (in meters) to crop from each edge.
+        baseline_subfolder (str, optional): Subfolder name to use as a baseline for percentage difference calculations.
 
     Returns:
         None
@@ -217,11 +294,12 @@ def process_shade_maps(main_folder, output_excel, edge_buffer=500):
                     results.append(shade_areas)
 
     # Save all results to Excel
-    save_results_to_excel(output_excel, results)
+    save_results_to_excel(output_excel, results, baseline_subfolder)
 
 
-# process_shade_maps(
-#     main_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results",
-#     output_excel=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\shade_test.xlsx",
-#     edge_buffer=500
-# )
+process_shade_maps(
+    main_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results",
+    output_excel=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\shade_update2.xlsx",
+    edge_buffer=500,
+    baseline_subfolder = 'aoi1_all_local_auto'
+)
