@@ -3,7 +3,7 @@ import numpy as np
 from rasterio.windows import from_bounds
 from rasterio.warp import reproject, Resampling
 import rasterio
-from shade_area_calculation import read_raster, get_bbx_with_edge_buffer, crop_to_bbx  # Import the provided functions
+from shade_area_calculation import read_raster, get_bbx_with_edge_buffer, crop_to_bbx
 
 
 def overlay_and_calculate_difference(main_folder, output_folder, base_run, edge_buffer=500):
