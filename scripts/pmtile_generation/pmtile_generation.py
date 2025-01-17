@@ -5,9 +5,11 @@ import subprocess
 from pathlib import Path
 import boto3
 from botocore.exceptions import ClientError
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from typing import Dict, List, Tuple, Union
 import shutil
+
+API_URL_DOMAIN = "https://fotomei.com"
 
 
 def get_city_ids() -> Tuple[List[str], Union[str, None]]:
@@ -20,7 +22,8 @@ def get_city_ids() -> Tuple[List[str], Union[str, None]]:
         - An error string if an exception happens, else None
     """
     try:
-        response = requests.get("https://fotomei.com/cities")
+        url = urljoin(API_URL_DOMAIN, "cities")
+        response = requests.get(url)
     except Exception as e:
         return None, f"Error retrieving city IDs: {str(e)}"
     if response.status_code != 200:
@@ -31,8 +34,6 @@ def get_city_ids() -> Tuple[List[str], Union[str, None]]:
     data = response.json()
     cities = data["cities"]
     city_ids = [c["id"] for c in cities]
-    # print(city_ids)
-    # pprint.pprint(data)
     return city_ids, None
 
 
@@ -52,7 +53,8 @@ def get_layer_info(
         - An error string if there is a problem encountered else None
     """
     try:
-        response = requests.get(f"https://fotomei.com/layers/{layer_id}/{city_id}")
+        url = urljoin(API_URL_DOMAIN, f"layers/{layer_id}/{city_id}")
+        response = requests.get(url)
     except Exception as e:
         return None, f"Error retrieving layer information: {str(e)}"
     if response.status_code != 200:
@@ -113,7 +115,7 @@ def get_aggregated_layer_info(
     return layer_info_list, None
 
 
-def download_file_from_url(download_url: str, save_location: str) -> bool:
+def download_file_from_url(download_url: str, save_location: str) -> str:
     """
     Download a file pointed to by a URL and save to the specified location.
 
@@ -251,7 +253,7 @@ def generate_pmtiles_for_layers(
         pmtiles_file_name = geojson_file_name.with_suffix(".pmtiles")
         s3_pmtiles_path_name = str(Path(path).with_suffix(".pmtiles"))[1:]
         # print(path, geojson_file_name, pmtiles_file_name, s3_pmtiles_path_name)
-        print(s3_pmtiles_path_name)
+        # print(s3_pmtiles_path_name)
         error_str = download_file_from_url(
             layer_info["layer_url"], f"{data_dir}/{str(geojson_file_name)}"
         )
@@ -285,21 +287,28 @@ def generate_pmtiles_for_layers(
     return errors
 
 
-def print_s3_contents(s3_bucket_name: str, prefix: Union[str, None]) -> None:
+def retrieve_s3_contents(
+    s3_bucket_name: str, prefix: Union[str, None]
+) -> Tuple[Union[List[str], None], Union[str, None]]:
     """
-    Print the contents of the s3 bucket within the optional dir prefix
+    Retrieve the contents of the s3 bucket within the optional dir prefix
     ### Args:
         s3_bucket_name - s3 bucket from where to download/upload files
         prefix - the optional bucket prefix for keys. if none, prints the entire contents of bucket
     ### Returns:
-        None
+        A list of
     """
+    contents = []
+    try:
+        client = boto3.client("s3")
+        response = client.list_objects_v2(Bucket=s3_bucket_name, Prefix=prefix)
 
-    client = boto3.client("s3")
-    response = client.list_objects_v2(Bucket=s3_bucket_name, Prefix=prefix)
-
-    for content in response.get("Contents", []):
-        print(content["Key"])
+        for content in response.get("Contents", []):
+            contents.append(content["Key"])
+    except Exception as e:
+        return None, f"Error retrieving s3 contents : {str(e)}"
+    else:
+        return contents, None
 
 
 def convert_city_indicators_to_pmtiles(
@@ -365,12 +374,11 @@ def convert_city_indicators_to_pmtiles(
         for gjd in geojsons_list:
             # Get the geojson
             try:
-                print(
-                    f"https://fotomei.com/cities/{city_id}/indicators/geojson?admin_level={gjd['admin_level']}"
+                url = urljoin(
+                    API_URL_DOMAIN,
+                    f"cities/{city_id}/indicators/geojson?admin_level={gjd['admin_level']}",
                 )
-                response = requests.get(
-                    f"https://fotomei.com/cities/{city_id}/indicators/geojson?admin_level={gjd['admin_level']}"
-                )
+                response = requests.get(url)
             except Exception as e:
                 error_str = f"Error retrieving {gjd['admin_level']} geojson for city {city_id} : {str(e)}"
             if error_str or response.status_code != 200:
@@ -432,10 +440,203 @@ def convert_city_indicators_to_pmtiles(
     return errors, failed_city_ids
 
 
+def convert_geojson_urls_to_pmtiles(
+    data_dir: str,
+    source_url_path_list: List[str],
+    destination_s3_bucket: str,
+    destination_s3_dir,
+    coalesce_into_single_pmtiles_file: bool = False,
+    destination_s3_file_name: Union[str, None] = None,
+    overwrite_destination_if_exists: bool = True,
+) -> Union[List[str], None]:
+    """
+    Given the location of one or more geojsons in s3, convert them all to
+    either a multiple layers in one pmtiles file or individual pmtiles
+    files and store it back in the specified s3 location. If the
+    coalesce_into_single_pmtiles_file is True, then all the source_url_path_list
+    files will be coalesed into a single pmtiles file with the output name
+    of destination_s3_dir/destination_s3_file_name. If it is set to false then each
+    file on the input list will get put into a pmtiles directory which is under the
+    same parent directory as the source geojson directory.
+
+    ### Args:
+        - data_dir - a local dir where to store data and work on them
+        - source_URL_path_list: A list of paths of one or more geojsons
+        - destination_s3_bucket: The s3 bucket name of the destination file/s
+        - destination_s3_dir: The directory where the pmtiles file will be stored
+        - coalesce_into_single_pmtiles_file: If True, the coalesce all source geojsons
+        into a single pmtiles file with name destination_s3_file_name. If False,
+        convert each geojson into its own pmtiles using the source geojson file
+        name base as the pmtimes file name base.
+        - destination_s3_file_name: The name of the destination pmtimes file. Used only
+        if coalesce_into_single_pmtiles_file is True
+        - overwrite_destination_if_exists: If True and the destination file exists then
+        dont process. If False, process anyway.
+
+    ### Returns:
+        - None if successful or an error string if failed.
+
+    """
+    errors = []
+    # Create data_dir if it does not exist
+    os.makedirs(data_dir, exist_ok=True)
+
+    if coalesce_into_single_pmtiles_file and not destination_s3_file_name:
+        errors.append("Coalescing files requires an destination file name.")
+
+    # Download all files to data_dir
+    files_to_process = []
+    for url in source_url_path_list:
+        # If a destination_s3_dir is not provided,
+        # we will store the pmtiles in an s3 subdir which is called pmtiles
+        # and is in the same level as the source dir. So we need to get the
+        # parent dir here first.
+        parent_path = urlparse(url.strip().rsplit("/", 2)[0]).path
+        destination_pmtiles_path = os.path.join(parent_path, "pmtiles")
+        path = urlparse(url).path
+        save_path = f"{data_dir}/{str(Path(path.rsplit('/', 1)[-1]))}"
+        file_name_without_extension = str(Path(save_path.rsplit("/", 1)[-1]).stem)
+        # print(f"file without extension {file_name_without_extension}")
+        pmtiles_file_name = str(
+            Path(file_name_without_extension).with_suffix(".pmtiles")
+        )
+        if coalesce_into_single_pmtiles_file:
+            destination_s3_path_with_filename = os.path.join(
+                destination_s3_dir, destination_s3_file_name
+            )
+        else:
+            destination_s3_path_with_filename = os.path.join(
+                destination_pmtiles_path, pmtiles_file_name
+            )
+        if destination_s3_path_with_filename[0] == "/":
+            destination_s3_path_with_filename = destination_s3_path_with_filename[1:]
+        if not overwrite_destination_if_exists:
+            # First check if it exists
+            s3_client = boto3.client("s3")
+            try:
+                s3_client.head_object(
+                    Bucket=destination_s3_bucket,
+                    Key=destination_s3_path_with_filename,
+                )
+                # Exists so continue to next file in source list
+                print(f"{pmtiles_file_name} already exists in S3 so not processing")
+                continue
+            except ClientError as e:
+                if e.response["Error"]["Code"] == "404":
+                    pass
+                else:
+                    errors.append(f"Error checking file existence on S3: {str(e)}")
+        error = download_file_from_url(url, save_path)
+        if error:
+            errors.append(error)
+            continue
+        else:
+            files_to_process.append(
+                {
+                    "filename_without_extension": file_name_without_extension,
+                    "local_geojson_path_with_filename": save_path,
+                    "pmtiles_file_name": pmtiles_file_name,
+                    "destination_s3_dir": f"{parent_path}/pmtiles",
+                    "destination_s3_path_with_filename": destination_s3_path_with_filename,
+                }
+            )
+    # print(files_to_process)
+
+    # Initialize list_of_layer_param_dicts and layer_param_list
+    list_of_layer_param_dicts = []
+
+    # Each layer_param_list consists of the source geojson and its corresponding layer name
+    # in the pmtiles. This is useful when coalescing but is needed as a param for conversion
+    # in both cases.
+    layer_param_list = []
+
+    # For each file in source list
+    for file_info in files_to_process:
+        local_geojson_path_with_filename = file_info["local_geojson_path_with_filename"]
+        layer_param_list.append(
+            {
+                "file": local_geojson_path_with_filename,
+                "layer": file_info["filename_without_extension"],
+            }
+        )
+        if not coalesce_into_single_pmtiles_file:
+            list_of_layer_param_dicts.append(
+                {
+                    "layer_params": layer_param_list,
+                    "destination_s3_path_with_filename": file_info[
+                        "destination_s3_path_with_filename"
+                    ],
+                }
+            )
+            layer_param_list = []
+            # print(list_of_layer_param_dicts)
+        else:
+            # All the layers will get added into one so keep appending to the same layer_param_list
+            pass
+    if coalesce_into_single_pmtiles_file:
+        list_of_layer_param_dicts.append(
+            {
+                "layer_params": layer_param_list,
+                "destination_s3_path_with_filename": files_to_process[0][
+                    "destination_s3_path_with_filename"
+                ],
+            }
+        )
+    # print(list_of_layer_param_dicts)
+    for layer_param_dict in list_of_layer_param_dicts:
+        if coalesce_into_single_pmtiles_file:
+            # Should have been provided in the function argument so take from there
+            local_pmtiles_path_with_filename = os.path.join(
+                data_dir, destination_s3_file_name
+            )
+        else:
+            # Derive from the layer name for each file
+            local_pmtiles_path_with_filename = os.path.join(
+                data_dir, f"{layer_param_dict['layer_params'][0]['layer']}.pmtiles"
+            )
+        error = None
+        error = convert_geojson_to_pmtiles(
+            layer_param_dict["layer_params"], local_pmtiles_path_with_filename, 13, None
+        )
+        if error:
+            errors.append(error)
+        else:
+            print(
+                f"Uploading from {local_pmtiles_path_with_filename} to {layer_param_dict['destination_s3_path_with_filename']}"
+            )
+            error = upload_file_to_s3_bucket(
+                local_pmtiles_path_with_filename,
+                destination_s3_bucket,
+                layer_param_dict["destination_s3_path_with_filename"],
+            )
+            # print(error)
+            if error:
+                errors.append(error)
+
+    if errors:
+        print(errors)
+        return errors
+    else:
+        return None
+
+
 if __name__ == "__main__":
 
     # Set a temporary local storage directory
     DATA_DIR = "/Users/raghuram.bk/work/google_project/data/pmtiles/indicators"
+    convert_geojson_urls_to_pmtiles(
+        DATA_DIR,
+        [
+            # "https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/ZAF-Cape_town__business_district__boundaries__2024.geojson",
+            "https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/roads/geojson/ZAF-Cape_town__business_district__roads_pedestrian__2024.geojson",
+        ],
+        "wri-cities-data-api",
+        "data/prd/boundaries/pmtiles",
+        False,
+        None,
+        True,
+    )
+    """    
     errors = generate_pmtiles_for_layers(
         s3_bucket_name="cities-indicators",
         data_dir=DATA_DIR,
@@ -458,7 +659,7 @@ if __name__ == "__main__":
     # print(download_file_from_url('https://cities-indicators.s3.amazonaws.com/data/open_space/openstreetmap/ARG-Mar_del_Plata-ADM3-OSM-open_space-2022.geojson', './test.geojson'))
     # print(convert_geojson_to_pmtiles([{'file':'./test.geojson', 'layer': 'test'}], './test.pmtiles'))
     # print(upload_file_to_s3_bucket('./test.pmtiles', 'cities-indicators', 'data/open_space/openstreetmap/ARG-Buenos_Aires-ADM2union-OSM-open_space-2022.pmtiles'))
-    """
+
     errors = generate_pmtiles_for_layers(
         s3_bucket_name="cities-indicators",
         data_dir=DATA_DIR,
@@ -481,5 +682,9 @@ if __name__ == "__main__":
     )
 
     print(errors, failed_city_ids)
-    print_s3_contents("cities-indicators", "data-pmtiles/")
+    print(retrieve_s3_contents("cities-indicators", "data-pmtiles/"))
     """
+    # print(retrieve_s3_contents(
+    #    "wri-cities-data-api",
+    #    "cities_indicators_dashboard/dev/ARG-Buenos_Aires/geojson/",
+    # ))
