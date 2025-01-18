@@ -91,19 +91,19 @@ tasks = [
     #     "classifications": [2, 6],
     # }
 ]
-
-def process_task(task):
-    return las_to_tif_with_filter(
-        task["las_file_path"],
-        task["output_tif_path"],
-        task["classifications"]
-    )
-
-
-if __name__ == "__main__":
-    with ProcessPoolExecutor() as executor:
-        # Run tasks in parallel using the helper function
-        results = list(executor.map(process_task, tasks))
+#
+# def process_task(task):
+#     return las_to_tif_with_filter(
+#         task["las_file_path"],
+#         task["output_tif_path"],
+#         task["classifications"]
+#     )
+#
+#
+# if __name__ == "__main__":
+#     with ProcessPoolExecutor() as executor:
+#         # Run tasks in parallel using the helper function
+#         results = list(executor.map(process_task, tasks))
 
 # def laz_to_tif(input_path, output_path, resolution = 1):
 #
@@ -223,4 +223,4 @@ def process_laz_to_tif(las_file_path, output_tif_path, resolution=1):
 
 
 
-#process_laz_to_tif(r'C:\Users\www\WRI-cif\Amsterdam\dbscan_test2.LAZ', r'C:\Users\www\WRI-cif\Amsterdam\tree_height_local.tif', resolution=1)
+process_laz_to_tif(r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\tree_aoi2_m_db.laz", r'C:\Users\www\WRI-cif\Amsterdam\aoi2_tree_height_28992.tif', resolution=1)
