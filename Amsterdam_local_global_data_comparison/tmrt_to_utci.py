@@ -236,10 +236,55 @@ def utci_calc(Ta, ehPa, va, Tmrt):
 
     return UTCI_approx
 
+def parse_met_data(met_file):
+    """Parse meteorological data from fixed-column format."""
+    # Define column names based on the format provided
+    col_names = [
+        "iy", "id", "it", "imin", "qn", "qh", "qe", "qs", "qf",
+        "U", "RH", "Tair", "press", "rain", "kdown", "snow", "ldown",
+        "fcld", "wuh", "xsmd", "lai", "kdiff", "kdir", "wdir"
+    ]
+
+    # Read the file with fixed-width format
+    df = pd.read_csv(
+        met_file,
+        delim_whitespace=True,  # Columns are separated by spaces
+        names=col_names,        # Specify column names
+        na_values="-999",       # Treat "-999" as NaN (this works without a list)
+        skiprows=1              # Skip header row if necessary
+    )
+
+    return df
+
+def match_met_to_time(met_data, target_time):
+    """Match meteorological data to a specific time."""
+    matched = met_data[met_data["it"] == target_time]
+    if matched.empty:
+        raise ValueError(f"No meteorological data found for time {target_time}.")
+    return matched.iloc[0]
+
+def check_inputs(at, wind, vpd, mrt_arr):
+    """Validate the ranges of meteorological and MRT input values."""
+    if not -50 <= at <= 50:
+        raise ValueError("Temperature must be between -50 and 50 °C!")
+    if not 0.5 <= wind <= 17:
+        raise ValueError("Wind speed must be between 0.5 and 17 m/s!")
+    if not 0 <= vpd <= 50:
+        raise ValueError("Vapor pressure deficit must be between 0 and 50 hPa!")
+    if not all((at - 30) <= val <= (at + 70) for val in np.ndarray.flatten(mrt_arr)):
+        raise ValueError("MRT must be between 30 °C below and 70 °C above the air temp!")
+
+def write_raster(file_path, array, profile):
+    """Write array to a raster file using Rasterio."""
+    profile.update(dtype=rasterio.float32, count=1)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with rasterio.open(file_path, "w", **profile) as dst:
+        dst.write(array, 1)
+
 
 def process_tmrt_to_utci(main_folder, output_folder, met_file, edge_buffer=500):
     """
-    Process Tmrt maps, convert to UTCI, and save UTCI maps while preserving folder structure.
+    Process Tmrt maps, convert to UTCI, and save UTCI maps while matching meteorological data.
 
     Parameters:
         main_folder (str): Path to the main folder containing subfolders with Tmrt maps.
@@ -250,63 +295,76 @@ def process_tmrt_to_utci(main_folder, output_folder, met_file, edge_buffer=500):
     Returns:
         None
     """
-    # Keys to locate time-of-day Tmrt maps
-    time_keys = ["Tmrt_2023_189_1200D", "Tmrt_2023_189_1500D", "Tmrt_2023_189_1800D"]
-    time_mapping = {"Tmrt_2023_189_1200D": "12", "Tmrt_2023_189_1500D": "15", "Tmrt_2023_189_1800D": "18"}
+    # Parse meteorological data
+    met_data = parse_met_data(met_file)
 
-    # Load meteorological data
-    met_data = pd.read_csv(met_file)
-    at = met_data["temp"].iloc[0]  # Air temperature (°C)
-    wind = met_data["wind"].iloc[0]  # Wind speed (m/s)
-    vpd = met_data["vpd"].iloc[0]  # Vapor pressure deficit (hPa)
+    # Keys to locate time-of-day Tmrt maps and match them with meteorological data
+    time_keys = ["Tmrt_2023_189_1200D", "Tmrt_2023_189_1500D", "Tmrt_2023_189_1800D"]
+    time_mapping = {"Tmrt_2023_189_1200D": 12, "Tmrt_2023_189_1500D": 15, "Tmrt_2023_189_1800D": 18}
 
     # Walk through the main directory
     for subfolder in os.listdir(main_folder):
         subfolder_path = os.path.join(main_folder, subfolder)
         if not os.path.isdir(subfolder_path):
-            continue  # Skip non-folders
+            continue
 
         print(f"Processing UTCI for run: {subfolder}")
         output_subfolder = os.path.join(output_folder, subfolder)
         os.makedirs(output_subfolder, exist_ok=True)
 
-        # Process each time of day
-        for time_key, time_short in time_mapping.items():
+        # Process each time-of-day map
+        for time_key, target_time in time_mapping.items():
             tmrt_file_path = os.path.join(subfolder_path, f"{time_key}.tif")
 
             if not os.path.exists(tmrt_file_path):
                 print(f"Missing file for {time_key} in {subfolder}, skipping...")
                 continue
 
-            # Read and crop Tmrt raster
-            tmrt_data, tmrt_metadata = read_raster(tmrt_file_path)
-            bbx = crop_to_bbx(tmrt_data, tmrt_metadata, edge_buffer)[2]  # Get BBX from cropping
+            # Match meteorological data for the specific time
+            met_row = match_met_to_time(met_data, target_time)
+            at = met_row["Tair"]
+            wind = met_row["U"]
+            vpd = met_row["press"]
 
+            # Read Tmrt raster
+            tmrt_data, tmrt_metadata = read_raster(tmrt_file_path)
+
+            # Calculate the bounding box with edge_buffer
+            from rasterio.transform import array_bounds
+            bounds = array_bounds(
+                tmrt_metadata['height'],
+                tmrt_metadata['width'],
+                tmrt_metadata['transform']
+            )
+
+            # Apply the edge buffer
+            bbx = (
+                bounds[1] + edge_buffer,  # min_x
+                bounds[0] + edge_buffer,  # min_y
+                bounds[3] - edge_buffer,  # max_x
+                bounds[2] - edge_buffer   # max_y
+            )
+
+            # Validate and crop Tmrt raster
             cropped_tmrt, cropped_metadata = crop_to_bbx(tmrt_data, tmrt_metadata, bbx)
+
+            # Validate inputs
+            check_inputs(at, wind, vpd, cropped_tmrt)
 
             # Calculate UTCI
             utci_data = utci_calc(at, vpd, wind, cropped_tmrt)
 
             # Save UTCI raster
-            output_file = os.path.join(output_subfolder, f"UTCI_{time_short}.tif")
+            output_file = os.path.join(output_subfolder, f"UTCI_{target_time:02d}.tif")
             write_raster(output_file, utci_data.astype(np.float32), cropped_metadata)
             print(f"Saved UTCI raster: {output_file}")
 
 
-
-def write_raster(file_path, array, profile):
-    """Write array to a raster file using Rasterio."""
-    profile.update(dtype=rasterio.float32, count=1)
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Ensure the output directory exists
-    with rasterio.open(file_path, "w", **profile) as dst:
-        dst.write(array, 1)
-
-
 if __name__ == "__main__":
     # Define input/output directories and meteorological data file
-    input_main_dir = "path_to_main_tmrt_directory"
-    output_main_dir = "path_to_main_utci_directory"
-    met_file = "path_to_your_met_data.csv"
+    input_main_dir = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results"
+    output_main_dir = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci"
+    met_file = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\met_era5_hottest_days.txt"
 
     # Execute processing
     process_tmrt_to_utci(input_main_dir, output_main_dir, met_file)

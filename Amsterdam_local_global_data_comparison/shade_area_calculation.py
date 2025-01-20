@@ -52,12 +52,16 @@ def crop_to_bbx(data, metadata, bbx, output_path=None):
     Parameters:
         data (numpy.ndarray): Raster data array.
         metadata (dict): Metadata from the raster file.
-        bbx (tuple): Bounding box in the format (min_x, min_y, max_x, max_y).
+        bbx (tuple or list): Bounding box in the format (min_x, min_y, max_x, max_y).
         output_path (str, optional): Path to save the cropped raster. If None, the cropped raster is not saved.
 
     Returns:
         tuple: Cropped data (numpy.ndarray), updated metadata (dict).
     """
+    # Ensure BBX is a tuple or list with four values
+    if not (isinstance(bbx, (tuple, list)) and len(bbx) == 4):
+        raise TypeError("Bounding box (bbx) must be a tuple or list with four values: (min_x, min_y, max_x, max_y).")
+
     # Extract transform from metadata
     transform = metadata['transform']
 
