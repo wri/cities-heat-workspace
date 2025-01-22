@@ -3,6 +3,7 @@ import os
 import json
 import subprocess
 from pathlib import Path
+import geopandas
 import boto3
 from botocore.exceptions import ClientError
 from urllib.parse import urlparse, urljoin
@@ -440,6 +441,34 @@ def convert_city_indicators_to_pmtiles(
     return errors, failed_city_ids
 
 
+def reproject_geojson(local_file_location: str) -> Union[List[str], None]:
+    """
+    Check the projection of a provided geojson file. If it is not epsg 4326,
+    then reproject it to that projection and save it in the same file location.
+
+     ### Args:
+         - local_file_location: The location of the file to check and
+         reproject if necessary
+
+     ### Returns:
+         - None if successful or an error string if failed.
+
+    """
+
+    try:
+        input_gpd = geopandas.read_file(local_file_location)
+        # print("input crs", input_gpd.crs)
+        if input_gpd.crs != "EPSG:4326":
+            print("Reprojecting to EPSG:4326")
+            output_gpd = input_gpd.to_crs(epsg=4326)
+            with open(local_file_location, "w") as f:
+                f.write(output_gpd.to_json())
+    except Exception as e:
+        return f"Error reprojecting geojson {local_file_location}: {str(e)}"
+    else:
+        return None
+
+
 def convert_geojson_urls_to_pmtiles(
     data_dir: str,
     source_url_path_list: List[str],
@@ -531,6 +560,11 @@ def convert_geojson_urls_to_pmtiles(
             errors.append(error)
             continue
         else:
+            print("Checking and fixing geojson projection")
+            error = reproject_geojson(save_path)
+            if error:
+                print(error)
+                errors.append(error)
             files_to_process.append(
                 {
                     "filename_without_extension": file_name_without_extension,
@@ -624,11 +658,14 @@ if __name__ == "__main__":
 
     # Set a temporary local storage directory
     DATA_DIR = "/Users/raghuram.bk/work/google_project/data/pmtiles/indicators"
+
     convert_geojson_urls_to_pmtiles(
         DATA_DIR,
         [
+            "https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/roads/geojson/ped_roads_lines.geojson"
+            # "https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_town/scenarios/street-trees/vectors/ped_roads_lines.geojson",
             # "https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/ZAF-Cape_town__business_district__boundaries__2024.geojson",
-            "https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/roads/geojson/ZAF-Cape_town__business_district__roads_pedestrian__2024.geojson",
+            # "https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/roads/geojson/ZAF-Cape_town__business_district__roads_pedestrian__2024.geojson",
         ],
         "wri-cities-data-api",
         "data/prd/boundaries/pmtiles",
@@ -636,6 +673,7 @@ if __name__ == "__main__":
         None,
         True,
     )
+
     """    
     errors = generate_pmtiles_for_layers(
         s3_bucket_name="cities-indicators",
