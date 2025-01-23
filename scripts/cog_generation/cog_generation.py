@@ -170,10 +170,13 @@ def convert_and_upload_tiffs_to_cogs(
         # print(f"file without extension {file_name_without_extension}")
         # print(f"extension {extension}")
         cog_file_name = str(
-            Path(f"{file_name_without_extension}_cog").with_suffix(extension)
+            Path(f"{file_name_without_extension}").with_suffix(extension)
         )
         # print(cog_file_name)
         local_cog_file_path_with_filename = os.path.join(data_dir, cog_file_name)
+        destination_s3_path_with_filename = destination_s3_path_with_filename.replace(
+            "\\", "/"
+        )
         # print(local_cog_file_path_with_filename)
 
         # we will store the cogs in an s3 subdir which is called cogs
@@ -186,8 +189,10 @@ def convert_and_upload_tiffs_to_cogs(
         destination_s3_path_with_filename = os.path.join(
             destination_cogs_path, cog_file_name
         )
+
         if destination_s3_path_with_filename[0] == "/":
             destination_s3_path_with_filename = destination_s3_path_with_filename[1:]
+
         # print(destination_s3_path_with_filename)
 
         if not overwrite_destination_if_exists:
