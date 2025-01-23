@@ -2,7 +2,7 @@ import os
 import rasterio
 import numpy as np
 import pandas as pd
-from shade_area_calculation import read_raster, crop_to_bbx
+from shade_area_calculation import read_raster, get_bbx_with_edge_buffer, crop_to_bbx
 
 
 def utci_calc(Ta, ehPa, va, Tmrt):
@@ -16,6 +16,8 @@ def utci_calc(Ta, ehPa, va, Tmrt):
 
     # UTCI_approx, Version a 0.002, October 2009
     # Copyright (C) 2009  Peter Broede
+
+    '''returns a nunpy array'''
 
     D_Tmrt = Tmrt - Ta
     # use vapour pressure in kPa
@@ -234,7 +236,7 @@ def utci_calc(Ta, ehPa, va, Tmrt):
                    (1.48348065e-03) * Pa * Pa * Pa * Pa * Pa * Pa
                    ]
 
-    return UTCI_approx
+    return np.array(UTCI_approx)
 
 def parse_met_data(met_file):
     """Parse meteorological data from fixed-column format."""
@@ -242,7 +244,7 @@ def parse_met_data(met_file):
     col_names = [
         "iy", "id", "it", "imin", "qn", "qh", "qe", "qs", "qf",
         "U", "RH", "Tair", "press", "rain", "kdown", "snow", "ldown",
-        "fcld", "wuh", "xsmd", "lai", "kdiff", "kdir", "wdir"
+        "fcld", "wuh", "xsmd", "lai", "kdiff", "kdir", "wdir" ,"vpd"
     ]
 
     # Read the file with fixed-width format
@@ -274,10 +276,39 @@ def check_inputs(at, wind, vpd, mrt_arr):
     if not all((at - 30) <= val <= (at + 70) for val in np.ndarray.flatten(mrt_arr)):
         raise ValueError("MRT must be between 30 °C below and 70 °C above the air temp!")
 
+def calculate_ehPa(T, vpd):
+    """
+    Calculate water vapor pressure (ehPa) from air temperature (T) and vapor pressure deficit (vpd).
+
+    Parameters:
+        T (float): Air temperature in °C.
+        vpd (float): Vapor pressure deficit in hPa.
+
+    Returns:
+        float: Water vapor pressure (ehPa) in hPa.
+    """
+    # Calculate saturation vapor pressure (es) in hPa
+    es = 6.1078 * (10 ** ((7.5 * T) / (T + 237.3)))
+    # Calculate ehPa
+    ehPa = es - vpd
+    return ehPa
+
+
 def write_raster(file_path, array, profile):
     """Write array to a raster file using Rasterio."""
-    profile.update(dtype=rasterio.float32, count=1)
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    # Ensure array is 2D
+    if array.ndim == 3 and array.shape[0] == 1:
+        array = array.squeeze(axis=0)
+
+    # Update profile to match array dimensions
+    profile.update(
+        dtype=rasterio.float32,
+        count=1,  # Ensure single band
+        height=array.shape[0],
+        width=array.shape[1]
+    )
+
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Ensure output dir exists
     with rasterio.open(file_path, "w", **profile) as dst:
         dst.write(array, 1)
 
@@ -324,26 +355,22 @@ def process_tmrt_to_utci(main_folder, output_folder, met_file, edge_buffer=500):
             met_row = match_met_to_time(met_data, target_time)
             at = met_row["Tair"]
             wind = met_row["U"]
-            vpd = met_row["press"]
+            vpd = met_row["vpd"]
+
+            ehPa = calculate_ehPa(at, vpd)
 
             # Read Tmrt raster
             tmrt_data, tmrt_metadata = read_raster(tmrt_file_path)
 
-            # Calculate the bounding box with edge_buffer
-            from rasterio.transform import array_bounds
-            bounds = array_bounds(
-                tmrt_metadata['height'],
-                tmrt_metadata['width'],
-                tmrt_metadata['transform']
-            )
+            bbx = get_bbx_with_edge_buffer(tmrt_metadata, edge_buffer=edge_buffer)
 
-            # Apply the edge buffer
-            bbx = (
-                bounds[1] + edge_buffer,  # min_x
-                bounds[0] + edge_buffer,  # min_y
-                bounds[3] - edge_buffer,  # max_x
-                bounds[2] - edge_buffer   # max_y
-            )
+            # # Calculate the bounding box with edge_buffer
+            # from rasterio.transform import array_bounds
+            # bounds = array_bounds(
+            #     tmrt_metadata['height'],
+            #     tmrt_metadata['width'],
+            #     tmrt_metadata['transform']
+            # )
 
             # Validate and crop Tmrt raster
             cropped_tmrt, cropped_metadata = crop_to_bbx(tmrt_data, tmrt_metadata, bbx)
@@ -352,7 +379,7 @@ def process_tmrt_to_utci(main_folder, output_folder, met_file, edge_buffer=500):
             check_inputs(at, wind, vpd, cropped_tmrt)
 
             # Calculate UTCI
-            utci_data = utci_calc(at, vpd, wind, cropped_tmrt)
+            utci_data = utci_calc(at, ehPa, wind, cropped_tmrt)
 
             # Save UTCI raster
             output_file = os.path.join(output_subfolder, f"UTCI_{target_time:02d}.tif")
@@ -364,7 +391,7 @@ if __name__ == "__main__":
     # Define input/output directories and meteorological data file
     input_main_dir = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results"
     output_main_dir = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci"
-    met_file = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\met_era5_hottest_days.txt"
+    met_file = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\met_era5_hottest_days - Copy.txt"
 
     # Execute processing
     process_tmrt_to_utci(input_main_dir, output_main_dir, met_file)
