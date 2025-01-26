@@ -24,7 +24,8 @@ def create_legend(ax_legend, legend_style, min_val, max_val, cmap=None, norm=Non
     label = {
         "temp": "TMRT (°C)",
         "tree_height": "Tree Height (m)",
-        "building_height": "Building Height (m)"
+        "building_height": "Building Height (m)",
+        "utci": "UTCI(°C)"
     }.get(legend_style, "Value")
 
     colorbar = plt.colorbar(
@@ -81,7 +82,7 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
     #
     #     # Plot the raster layer with enhanced Turbo colormap
     #     show(raster, ax=ax_map, extent=raster_extent, alpha=1.0, cmap=cmap, norm=norm)
-    if legend_style in ["temp", "tree_height", "building_height"]:  # Continuous color ramp
+    if legend_style in ["temp", "tree_height", "building_height", "utci"]:  # Continuous color ramp
         # Use PowerNorm for a nonlinear scaling emphasizing lower values
         norm = PowerNorm(gamma=0.5, vmin=min_val, vmax=max_val)  # Adjust gamma as needed for emphasis
         cmap = "turbo"  # Turbo colormap for smooth blue-to-red transition
@@ -129,7 +130,7 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
 
     # Add the legend
     ax_legend = fig.add_axes([0.75, 0.08, 0.08, 0.3])  # Continuous legends
-    if legend_style in ["temp", "tree_height", "building_height"]:
+    if legend_style in ["temp", "tree_height", "building_height", "utci"]:
         colorbar = plt.colorbar(
             plt.cm.ScalarMappable(cmap=cmap, norm=norm),
             cax=ax_legend,
@@ -138,7 +139,8 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
         label = {
             "temp": "TMRT (°C)",
             "tree_height": "Tree Height (m)",
-            "building_height": "Building Height (m)"
+            "building_height": "Building Height (m)",
+            "utci": "UTCI(°C)"
         }.get(legend_style, "Value")
         colorbar.set_label(label, fontsize=10)
         colorbar.ax.tick_params(labelsize=8)
@@ -172,7 +174,8 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
         plt.show()
 
 #create_map(r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\source_data\aoi1_tree_height.tif", r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png", legend_style="building_height", output_file= None)
-create_map(r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\source_data\UTbuilding_NASADEM_1.tif", r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png", legend_style="building_height", output_file= r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\source_data\global_building.png")
+#create_map(r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\source_data\UTbuilding_NASADEM_1.tif", r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png", legend_style="building_height", output_file= r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\source_data\global_building.png")
+#create_map(r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci\aoi1_all_global\UTCI_12.tif", r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png", legend_style="utci", output_file= None)
 
 def batch_process_maps(input_folder, inset_path, output_folder, legend_style="shade"):
     """
@@ -182,25 +185,40 @@ def batch_process_maps(input_folder, inset_path, output_folder, legend_style="sh
     - input_folder: Folder containing `.tif` files.
     - inset_path: Path to the pre-created inset map image file.
     - output_folder: Folder to save the output maps.
-    - legend_style: 'shade' for processing Shadow_* files, 'temp' for Tmrt_* files.
+    - legend_style: 'shade' for processing Shadow_* files,
+                    'temp' for Tmrt_* files,
+                    'utci' for UTCI_* files.
     """
     # Ensure output folder exists
     os.makedirs(output_folder, exist_ok=True)
 
-    # Define prefix based on legend_style
-    prefix = "Shadow" if legend_style == "shade" else "Tmrt"
+    # Define prefix and time mapping based on legend_style
+    if legend_style == "shade":
+        prefix = "Shadow"
+        time_mapping = {"1200D": "12", "1500D": "15", "1800D": "18", "average": "average"}
+    elif legend_style == "temp":
+        prefix = "Tmrt"
+        time_mapping = {"1200D": "12", "1500D": "15", "1800D": "18", "average": "average"}
+    elif legend_style == "utci":
+        prefix = "UTCI"
+        time_mapping = {"12": "12", "15": "15", "18": "18", "average": "average"}
+    else:
+        raise ValueError("Invalid legend_style. Choose 'shade', 'temp', or 'utci'.")
 
     # Loop through all `.tif` files matching the prefix in the input folder
     for tif_file in Path(input_folder).glob(f"{prefix}_*.tif"):
-        # Extract the base file name (e.g., Shadow_2023_189_1200D)
+        # Extract the base file name (e.g., Shadow_2023_189_1200D or UTCI_12)
         base_name = tif_file.stem
 
-        # Extract the time portion (e.g., 1200D)
+        # Extract the time portion (e.g., 1200D for Shadow/Tmrt, 12 for UTCI)
         time_suffix = base_name.split("_")[-1]
 
-        # Map the time suffix to hour (e.g., 1200D -> 12)
-        time_mapping = {"1200D": "12", "1500D": "15", "1800D": "18", "average": "average"}
+        # Map the time suffix to hour using the appropriate mapping
         output_time = time_mapping.get(time_suffix, "unknown")
+
+        if output_time == "unknown":
+            print(f"Unrecognized time format in file {tif_file}, skipping...")
+            continue
 
         # Create the output file name
         output_file = Path(output_folder) / f"{Path(input_folder).name}_{output_time}.png"
@@ -236,5 +254,11 @@ def batch_process_maps(input_folder, inset_path, output_folder, legend_style="sh
 #     output_file=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\aoi1_all_global.png"
 # )
 
-
+# Example usage
+batch_process_maps(
+    input_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci\aoi1_all_local_auto",  # Folder containing .tif files
+    inset_path=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png",  # Path to inset map image
+    output_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_local",  # Folder to save output maps
+    legend_style="utci"  # Or "temp" for a continuous legend
+)
 #output_file= r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\all_global_shadow_12.tif",
