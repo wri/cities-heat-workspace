@@ -5,6 +5,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 from rio_cogeo.cogeo import cog_translate, cog_validate
 from rio_cogeo.profiles import cog_profiles
+import rioxarray
 import boto3
 from botocore.exceptions import ClientError
 from typing import List, Tuple, Union
@@ -128,6 +129,35 @@ def _convert_to_cog(
         return None
 
 
+def _check_and_reproject(
+    file_path: str, projection: str = "EPSG:4326"
+) -> Union[List[str], None]:
+    """
+    Give the file location for a geotiff file, check its projection
+    and if it is not the same as the projection parameter, then
+    reproject it to the given projection and save it in place
+
+    ### Args:
+        - file_path - path to a geotiff file that needs to be reprojected
+
+    """
+
+    try:
+        xds = rioxarray.open_rasterio(file_path)
+        if xds.rio.crs != projection:
+            # Need to reproject
+            print(f"Reprojecting Geotiff file to {projection}")
+            xds1 = xds.rio.reproject(projection)
+            xds1.rio.to_raster(file_path)
+        else:
+            # Already in the required projection so do nothing
+            pass
+    except Exception as e:
+        return f"Error reprojection file {file_path}: {str(e)}"
+    else:
+        return None
+
+
 def convert_and_upload_tiffs_to_cogs(
     data_dir: str,
     source_url_path_list: List[str],
@@ -174,9 +204,7 @@ def convert_and_upload_tiffs_to_cogs(
         )
         # print(cog_file_name)
         local_cog_file_path_with_filename = os.path.join(data_dir, cog_file_name)
-        destination_s3_path_with_filename = destination_s3_path_with_filename.replace(
-            "\\", "/"
-        )
+
         # print(local_cog_file_path_with_filename)
 
         # we will store the cogs in an s3 subdir which is called cogs
@@ -192,6 +220,11 @@ def convert_and_upload_tiffs_to_cogs(
 
         if destination_s3_path_with_filename[0] == "/":
             destination_s3_path_with_filename = destination_s3_path_with_filename[1:]
+
+        # Account for the possibility of script being run on Windows!
+        destination_s3_path_with_filename = destination_s3_path_with_filename.replace(
+            "\\", "/"
+        )
 
         # print(destination_s3_path_with_filename)
 
@@ -218,6 +251,12 @@ def convert_and_upload_tiffs_to_cogs(
         if error:
             print("Error downloading. Skipping to next URL")
             errors.append(f"Error downloading {url} - {error}")
+            continue
+
+        print("Checking projection")
+        error = _check_and_reproject(local_geotiff_path_with_filename)
+        if error:
+            errors.append(error)
             continue
 
         print("Converting to COG")
