@@ -1,6 +1,7 @@
 import rasterio
 from rasterio.plot import show
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 from matplotlib.patches import Rectangle
 import contextily as ctx
 import numpy as np
@@ -46,7 +47,7 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
     Parameters:
     - raster_path: Path to the input raster file.
     - inset_path: Path to the pre-created inset map image file.
-    - legend_style: 'shade', 'temp', 'tree_height', or 'building_height'.
+    - legend_style: 'shade', 'temp', 'tree_height', or 'building_height', utci, utci_diff_reclass.
     - output_file: Optional. Path to save the map as an image file. If None, the map will only be displayed.
     """
     # Load raster data
@@ -82,6 +83,9 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
     #
     #     # Plot the raster layer with enhanced Turbo colormap
     #     show(raster, ax=ax_map, extent=raster_extent, alpha=1.0, cmap=cmap, norm=norm)
+
+    cmap = None
+    norm = None
     if legend_style in ["temp", "tree_height", "building_height", "utci"]:  # Continuous color ramp
         # Use PowerNorm for a nonlinear scaling emphasizing lower values
         norm = PowerNorm(gamma=0.5, vmin=min_val, vmax=max_val)  # Adjust gamma as needed for emphasis
@@ -100,8 +104,17 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
         norm = BoundaryNorm(bounds, cmap.N)
         show(raster, ax=ax_map, extent=raster_extent, alpha=1.0, cmap=cmap, norm=norm)
 
+    elif legend_style == "utci_diff_reclass":
+
+        base_cmap = plt.cm.coolwarm
+        color_indices = [1, 30, 70, 99, 140, 175, 220, 250]  # Adjusted for a smooth transition
+        colors = base_cmap(color_indices)
+        cmap = ListedColormap(colors)
+        norm = Normalize(vmin=-6, vmax=6)
+        show(raster, ax=ax_map, extent=raster_extent, alpha=1.0, cmap=cmap, norm=norm)
+
     # Add OpenStreetMap basemap below the raster
-    ctx.add_basemap(ax_map, crs=raster_crs, source=ctx.providers.OpenStreetMap.Mapnik, alpha=0.4)
+    ctx.add_basemap(ax_map, crs=raster_crs, source=ctx.providers.OpenStreetMap.Mapnik, alpha=0.15)
 
     # Remove axis labels
     ax_map.axis("off")
@@ -129,8 +142,9 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
     ax_inset.axis("off")
 
     # Add the legend
-    ax_legend = fig.add_axes([0.75, 0.08, 0.08, 0.3])  # Continuous legends
+
     if legend_style in ["temp", "tree_height", "building_height", "utci"]:
+        ax_legend = fig.add_axes([0.75, 0.08, 0.08, 0.3])  # Continuous legends
         colorbar = plt.colorbar(
             plt.cm.ScalarMappable(cmap=cmap, norm=norm),
             cax=ax_legend,
@@ -142,12 +156,14 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
             "building_height": "Building Height (m)",
             "utci": "UTCI(°C)"
         }.get(legend_style, "Value")
+
         colorbar.set_label(label, fontsize=10)
         colorbar.ax.tick_params(labelsize=8)
         colorbar.ax.text(0.5, -0.15, f"{min_val:.1f}", fontsize=8, ha="center", transform=ax_legend.transAxes)
         colorbar.ax.text(0.5, 1.05, f"{max_val:.1f}", fontsize=8, ha="center", transform=ax_legend.transAxes)
 
     elif legend_style == "shade":
+        ax_legend = fig.add_axes([0.75, 0.08, 0.08, 0.3])
         ax_legend.axis("off")
         legend_items = [
             {"label": "Building Shade", "color": "blue"},
@@ -159,6 +175,14 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
                 plt.Rectangle((0, 0.8 - i * 0.2), 0.2, 0.1, color=item["color"], transform=ax_legend.transAxes))
             ax_legend.text(0.25, 0.85 - i * 0.2, item["label"], transform=ax_legend.transAxes,
                            fontsize=9, va="center", ha="left")
+
+    elif legend_style == "utci_diff_reclass":
+        ax_legend = fig.add_axes([0.78, -0.2, 0.1, 0.8])
+        unique_values = [-4, -2, -1, 0, 1, 2, 4, 10]
+        labels = ["< -4°C", "-4 to -2°C", "-2 to -1°C", "-1 to 0°C", "0 to 1°C", "1 to 2°C", "2 to 4°C", "> 4°C"]
+        patches = [Patch(color=cmap(norm(value)), label=label) for value, label in zip(unique_values, labels)]
+        legend = ax_legend.legend(handles=patches, loc='center', title="UTCI difference compared with baseline")
+        ax_legend.axis('off')
 
     # Add a proper north arrow in the upper-right corner of the main map
     ax_map.annotate(
@@ -174,8 +198,9 @@ def create_map(raster_path, inset_path, legend_style="shade", output_file=None):
         plt.show()
 
 #create_map(r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\source_data\aoi1_tree_height.tif", r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png", legend_style="building_height", output_file= None)
+#create_map(r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_reclass\utci_global_diff\difference_15_recl.tif", r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png", legend_style="utci_diff_reclass", output_file= None)
 #create_map(r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\source_data\UTbuilding_NASADEM_1.tif", r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png", legend_style="building_height", output_file= r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\source_data\global_building.png")
-#create_map(r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci\aoi1_all_global\UTCI_12.tif", r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png", legend_style="utci", output_file= None)
+#create_map(r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\source_data\UTbuilding_NASADEM_1.tif", r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png", legend_style="building_height")
 
 def batch_process_maps(input_folder, inset_path, output_folder, legend_style="shade"):
     """
@@ -187,55 +212,56 @@ def batch_process_maps(input_folder, inset_path, output_folder, legend_style="sh
     - output_folder: Folder to save the output maps.
     - legend_style: 'shade' for processing Shadow_* files,
                     'temp' for Tmrt_* files,
-                    'utci' for UTCI_* files.
+                    'utci' for UTCI_* files,
+                    'utci_diff_reclass' for Difference_* files.
     """
     # Ensure output folder exists
     os.makedirs(output_folder, exist_ok=True)
 
-    # Define prefix and time mapping based on legend_style
-    if legend_style == "shade":
-        prefix = "Shadow"
-        time_mapping = {"1200D": "12", "1500D": "15", "1800D": "18", "average": "average"}
-    elif legend_style == "temp":
-        prefix = "Tmrt"
-        time_mapping = {"1200D": "12", "1500D": "15", "1800D": "18", "average": "average"}
-    elif legend_style == "utci":
-        prefix = "UTCI"
-        time_mapping = {"12": "12", "15": "15", "18": "18", "average": "average"}
+    if legend_style == "utci_diff_reclass":
+        prefix = "difference"
+        # Process only files that start with 'difference_'
+        for tif_file in Path(input_folder).glob(f"{prefix}_*.tif"):
+            output_file = Path(output_folder) / (tif_file.stem + ".png")
+            print(f"Processing {tif_file} -> {output_file}")
+            create_map(
+                raster_path=str(tif_file),
+                inset_path=inset_path,
+                legend_style=legend_style,
+                output_file=str(output_file)
+            )
+    elif legend_style in ["shade", "temp", "utci"]:
+        # Define prefix and time mapping based on legend_style
+        if legend_style == "shade":
+            prefix = "Shadow"
+            time_mapping = {"1200D": "12", "1500D": "15", "1800D": "18", "average": "average"}
+        elif legend_style == "temp":
+            prefix = "Tmrt"
+            time_mapping = {"1200D": "12", "1500D": "15", "1800D": "18", "average": "average"}
+        elif legend_style == "utci":
+            prefix = "UTCI"
+            time_mapping = {"12": "12", "15": "15", "18": "18", "average": "average"}
+
+        # Loop through all `.tif` files matching the prefix in the input folder
+        for tif_file in Path(input_folder).glob(f"{prefix}_*.tif"):
+            base_name = tif_file.stem
+            time_suffix = base_name.split("_")[-1]
+            output_time = time_mapping.get(time_suffix, "unknown")
+
+            if output_time == "unknown":
+                print(f"Unrecognized time format in file {tif_file}, skipping...")
+                continue
+
+            output_file = Path(output_folder) / f"{Path(input_folder).name}_{output_time}.png"
+            print(f"Processing {tif_file} -> {output_file}")
+            create_map(
+                raster_path=str(tif_file),
+                inset_path=inset_path,
+                legend_style=legend_style,
+                output_file=str(output_file)
+            )
     else:
-        raise ValueError("Invalid legend_style. Choose 'shade', 'temp', or 'utci'.")
-
-    # Loop through all `.tif` files matching the prefix in the input folder
-    for tif_file in Path(input_folder).glob(f"{prefix}_*.tif"):
-        # Extract the base file name (e.g., Shadow_2023_189_1200D or UTCI_12)
-        base_name = tif_file.stem
-
-        # Extract the time portion (e.g., 1200D for Shadow/Tmrt, 12 for UTCI)
-        time_suffix = base_name.split("_")[-1]
-
-        # Map the time suffix to hour using the appropriate mapping
-        output_time = time_mapping.get(time_suffix, "unknown")
-
-        if output_time == "unknown":
-            print(f"Unrecognized time format in file {tif_file}, skipping...")
-            continue
-
-        # Create the output file name
-        output_file = Path(output_folder) / f"{Path(input_folder).name}_{output_time}.png"
-
-        print(f"Processing {tif_file} -> {output_file}")
-
-        # Generate the map
-        create_map(
-            raster_path=str(tif_file),
-            inset_path=inset_path,
-            legend_style=legend_style,
-            output_file=str(output_file)
-        )
-
-    print(f"Batch processing completed. Files saved to {output_folder}.")
-
-
+        raise ValueError("Invalid legend_style. Choose 'shade', 'temp', 'utci', or 'utci_diff_reclass'.")
 
 # Example usage
 # batch_process_maps(
@@ -255,10 +281,16 @@ def batch_process_maps(input_folder, inset_path, output_folder, legend_style="sh
 # )
 
 # Example usage
-batch_process_maps(
-    input_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci\aoi1_all_local_auto",  # Folder containing .tif files
-    inset_path=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png",  # Path to inset map image
-    output_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_local",  # Folder to save output maps
-    legend_style="utci"  # Or "temp" for a continuous legend
-)
+# batch_process_maps(
+#     input_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci\aoi1_all_local_auto",  # Folder containing .tif files
+#     inset_path=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png",  # Path to inset map image
+#     output_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_local",  # Folder to save output maps
+#     legend_style="utci"  # Or "temp" for a continuous legend
+# )
 #output_file= r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\all_global_shadow_12.tif",
+batch_process_maps(
+    input_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_reclass\utci_global_diff_aggr",  # Folder containing .tif files
+    inset_path=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png",  # Path to inset map image
+    output_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_reclass\utci_global_diff_aggr",  # Folder to save output maps
+    legend_style="utci_diff_reclass"  # Or "temp" for a continuous legend
+)

@@ -4,24 +4,76 @@ from rasterio.windows import from_bounds
 from rasterio.warp import reproject, Resampling
 import rasterio
 from shade_area_calculation import read_raster, get_bbx_with_edge_buffer, crop_to_bbx
-from shade_compare import align_raster, save_difference_raster
+from shade_compare import save_difference_raster
 
-def overlay_and_calculate_difference_tmrt(main_folder, output_folder, base_run, edge_buffer=500):
+def align_raster(source_data, source_meta, base_data, base_meta, resolution=1.0):
     """
-    Overlay Tmrt maps, calculate differences with a base run, and save difference maps as TIFF files.
+    Align a raster to match the exact dimensions, resolution, and CRS of a base raster.
 
     Parameters:
-        main_folder (str): Path to the main folder containing subfolders with Tmrt maps.
+        source_data (numpy.ndarray): Source raster data.
+        source_meta (dict): Metadata of the source raster.
+        base_data (numpy.ndarray): Base raster data for alignment.
+        base_meta (dict): Metadata of the base raster.
+        resolution (float): Desired resolution for the aligned raster (default 1.0).
+
+    Returns:
+        numpy.ndarray: Aligned raster data matching the base raster's dimensions.
+    """
+    # Extract transform and CRS from the base metadata
+    base_transform = base_meta['transform']
+    base_crs = base_meta['crs']
+    base_height, base_width = base_data.shape
+
+    # Snap the transform to the resolution to avoid floating-point mismatches
+    snapped_transform = base_transform._replace(
+        a=resolution,  # X resolution
+        e=-resolution,  # Y resolution
+        c=round(base_transform.c / resolution) * resolution,  # X origin
+        f=round(base_transform.f / resolution) * resolution   # Y origin
+    )
+
+    # Prepare an empty array to hold the aligned data
+    aligned_data = np.zeros((base_height, base_width), dtype=source_data.dtype)
+
+    # Reproject source raster to match the base raster
+    reproject(
+        source=source_data,
+        destination=aligned_data,
+        src_transform=source_meta['transform'],
+        src_crs=source_meta['crs'],
+        dst_transform=snapped_transform,
+        dst_crs=base_crs,
+        resampling=Resampling.bilinear
+    )
+
+    # Print debug information
+    print("DEBUG: Source Metadata:", source_meta)
+    print("DEBUG: Base Metadata:", base_meta)
+    print("DEBUG: Aligned Shape:", aligned_data.shape)
+
+    return aligned_data
+
+
+def overlay_and_calculate_difference(main_folder, output_folder, base_run, edge_buffer=500, compare_utci=False):
+    """
+    Overlay maps (Tmrt or UTCI), calculate differences with a base run, and save difference maps as TIFF files.
+
+    Parameters:
+        main_folder (str): Path to the main folder containing subfolders with maps.
         output_folder (str): Path to save the difference maps.
         base_run (str): Subfolder name to be used as the base run.
         edge_buffer (int): Buffer distance (in meters) to crop from each edge.
+        compare_utci (bool): Whether to process UTCI maps (default False for Tmrt maps).
 
     Returns:
         None
     """
-    # Keys to locate time-of-day Tmrt maps
-    time_keys = ["Tmrt_2023_189_1200D", "Tmrt_2023_189_1500D", "Tmrt_2023_189_1800D"]
-    time_mapping = {"Tmrt_2023_189_1200D": "12", "Tmrt_2023_189_1500D": "15", "Tmrt_2023_189_1800D": "18"}
+    # Keys and mappings for time-of-day maps
+    if compare_utci:
+        time_keys = ["UTCI_12", "UTCI_15", "UTCI_18"]
+    else:
+        time_keys = ["Tmrt_2023_189_1200D", "Tmrt_2023_189_1500D", "Tmrt_2023_189_1800D"]
 
     # Verify base folder
     base_folder = os.path.join(main_folder, base_run)
@@ -33,10 +85,27 @@ def overlay_and_calculate_difference_tmrt(main_folder, output_folder, base_run, 
     base_data, base_metadata = read_raster(ref_file)
     bbx = get_bbx_with_edge_buffer(base_metadata, edge_buffer)
 
+    print("DEBUG: Base raster BBX calculated as:", bbx)
+
     # Prepare output folder
     os.makedirs(output_folder, exist_ok=True)
 
-    # Loop through all runs
+    # Crop the base run for each time key
+    base_cropped_data = {}
+    base_cropped_meta = {}
+
+    for time_key in time_keys:
+        base_file_path = os.path.join(base_folder, f"{time_key}.tif")
+        base_data, base_metadata = read_raster(base_file_path)
+        cropped_data, cropped_meta = crop_to_bbx(base_data, base_metadata, bbx)
+
+        # Save cropped data for later use
+        base_cropped_data[time_key] = cropped_data
+        base_cropped_meta[time_key] = cropped_meta
+
+        print(f"DEBUG: Base run cropped for {time_key} with shape {cropped_data.shape}")
+
+    # Process comparison runs
     for subfolder in os.listdir(main_folder):
         subfolder_path = os.path.join(main_folder, subfolder)
         if not os.path.isdir(subfolder_path) or subfolder == base_run:
@@ -47,32 +116,28 @@ def overlay_and_calculate_difference_tmrt(main_folder, output_folder, base_run, 
         os.makedirs(output_subfolder, exist_ok=True)
 
         # Process each time of day
-        for time_key, time_short in time_mapping.items():
-            base_file_path = os.path.join(base_folder, f"{time_key}.tif")
+        for time_key in time_keys:
             compare_file_path = os.path.join(subfolder_path, f"{time_key}.tif")
 
-            # Skip if files are missing
-            if not os.path.exists(base_file_path) or not os.path.exists(compare_file_path):
+            if not os.path.exists(compare_file_path):
                 print(f"Missing file for {time_key} in {subfolder}, skipping...")
                 continue
-
-            # Read and crop base raster
-            base_data, base_metadata = read_raster(base_file_path)
-            base_cropped, base_cropped_meta = crop_to_bbx(base_data, base_metadata, bbx)
 
             # Read and crop comparison raster
             compare_data, compare_metadata = read_raster(compare_file_path)
             compare_cropped, compare_cropped_meta = crop_to_bbx(compare_data, compare_metadata, bbx)
 
             # Align comparison raster to match base raster
-            compare_aligned = align_raster(compare_cropped, compare_cropped_meta, base_cropped, base_cropped_meta)
+            base_data_cropped = base_cropped_data[time_key]
+            base_meta_cropped = base_cropped_meta[time_key]
+            compare_aligned = align_raster(compare_cropped, compare_cropped_meta, base_data_cropped, base_meta_cropped)
 
             # Calculate difference
-            difference = compare_aligned - base_cropped
+            difference = compare_aligned - base_data_cropped
 
             # Save difference map
-            output_path = os.path.join(output_subfolder, f"difference_{time_short}.tif")
-            save_difference_raster(difference, base_cropped_meta, output_path)
+            output_path = os.path.join(output_subfolder, f"difference_{time_key.split('_')[-1]}.tif")
+            save_difference_raster(difference, base_meta_cropped, output_path)
             print(f"Saved difference map to {output_path}")
 
 
@@ -180,17 +245,30 @@ def batch_resample_tmrt_maps(diff_folder, aggr_folder, resolutions, methods):
                         print(f"Resampled raster saved to {output_raster} using {method} method.")
 
 
-if __name__ == "__main__":
-    main_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results"  # Folder with subfolders for Tmrt maps
-    diff_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_tmrt_compare"  # Folder containing subfolders with Tmrt difference maps
-    aggr_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_tmrt_aggr"
-    base_run = "aoi1_all_local_auto"  # Base run for difference calculation
-    edge_buffer = 500  # Buffer distance in meters
-    resolutions = [5, 10, 15, 25, 30]  # Resolutions in meters for resampling
-    methods = ["bilinear", "average"]  # Resampling methods
+# if __name__ == "__main__":
+#     main_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results"  # Folder with subfolders for Tmrt maps
+#     diff_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_tmrt_compare"  # Folder containing subfolders with Tmrt difference maps
+#     aggr_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_tmrt_aggr"
+#     base_run = "aoi1_all_local_auto"  # Base run for difference calculation
+#     edge_buffer = 500  # Buffer distance in meters
+#     resolutions = [5, 10, 15, 25, 30]  # Resolutions in meters for resampling
+#     methods = ["bilinear", "average"]  # Resampling methods
+#
+#     # Overlay and calculate differences
+#     overlay_and_calculate_difference_tmrt(main_folder, diff_folder, base_run, edge_buffer)
+#
+#     # Resample difference maps
+#     batch_resample_tmrt_maps(diff_folder, aggr_folder, resolutions, methods)
 
-    # Overlay and calculate differences
-    overlay_and_calculate_difference_tmrt(main_folder, diff_folder, base_run, edge_buffer)
+# overlay_and_calculate_difference(
+#     main_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_full",
+#     output_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_diff",
+#     base_run="aoi1_all_local_auto",
+#     edge_buffer=500,
+#     compare_utci=True
+# )
 
-    # Resample difference maps
-    batch_resample_tmrt_maps(diff_folder, aggr_folder, resolutions, methods)
+batch_resample_tmrt_maps(diff_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_diff",
+                         aggr_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_aggr",
+                         resolutions= [5, 10, 15, 25, 30],
+                         methods=["bilinear", "average"])

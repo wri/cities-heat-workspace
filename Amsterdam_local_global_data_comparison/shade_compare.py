@@ -92,17 +92,13 @@ def align_raster(source_data, source_meta, target_data, target_meta):
     """
     try:
         # Calculate the intersection of source and target bounds
-        source_bounds = (
-            source_meta['transform'][2],  # min_x
-            source_meta['transform'][5] + source_meta['height'] * source_meta['transform'][4],  # min_y
-            source_meta['transform'][2] + source_meta['width'] * source_meta['transform'][0],  # max_x
-            source_meta['transform'][5],  # max_y
+        source_bounds = rasterio.windows.bounds(
+            rasterio.windows.Window(0, 0, source_meta['width'], source_meta['height']),
+            source_meta['transform']
         )
-        target_bounds = (
-            target_meta['transform'][2],  # min_x
-            target_meta['transform'][5] + target_meta['height'] * target_meta['transform'][4],  # min_y
-            target_meta['transform'][2] + target_meta['width'] * target_meta['transform'][0],  # max_x
-            target_meta['transform'][5],  # max_y
+        target_bounds = rasterio.windows.bounds(
+            rasterio.windows.Window(0, 0, target_meta['width'], target_meta['height']),
+            target_meta['transform']
         )
 
         # Compute the intersection of the two bounding boxes
@@ -119,13 +115,16 @@ def align_raster(source_data, source_meta, target_data, target_meta):
 
         # Clip the source raster to the intersection bounds
         window = from_bounds(*intersect_bounds, transform=source_meta['transform'])
+        window = rasterio.windows.Window(
+            int(window.col_off), int(window.row_off), int(window.width), int(window.height)
+        )
         source_clipped = source_data[
-            int(window.row_off): int(window.row_off + window.height),
-            int(window.col_off): int(window.col_off + window.width),
+            window.row_off: window.row_off + window.height,
+            window.col_off: window.col_off + window.width,
         ]
 
         # Update metadata for the clipped raster
-        clipped_transform = window_transform(window, source_meta['transform'])
+        clipped_transform = rasterio.windows.transform(window, source_meta['transform'])
         source_meta_clipped = source_meta.copy()
         source_meta_clipped.update({
             "height": source_clipped.shape[0],
@@ -155,6 +154,7 @@ def align_raster(source_data, source_meta, target_data, target_meta):
     except ValueError as e:
         print(f"Error: {e}")
         raise
+
 
 
 def save_difference_raster(data, metadata, output_path):

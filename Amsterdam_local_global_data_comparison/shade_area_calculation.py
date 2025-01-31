@@ -33,12 +33,12 @@ def get_bbx_with_edge_buffer(metadata, edge_buffer=500):
     max_x = min_x + width * pixel_size
     min_y = max_y - height * pixel_size
 
-    # Calculate the cropped bounding box
+    # Calculate the cropped bounding box and round to nearest pixel
     cropped_bbx = (
-        min_x + edge_buffer,
-        min_y + edge_buffer,
-        max_x - edge_buffer,
-        max_y - edge_buffer
+        round(min_x + edge_buffer, 6),
+        round(min_y + edge_buffer, 6),
+        round(max_x - edge_buffer, 6),
+        round(max_y - edge_buffer, 6)
     )
 
     print(f"Cropped Bounding Box: {cropped_bbx}")
@@ -66,7 +66,13 @@ def crop_to_bbx(data, metadata, bbx, output_path=None):
     transform = metadata['transform']
 
     # Create a window for the given bounding box
-    window = from_bounds(*bbx, transform=transform)
+    try:
+        window = from_bounds(*bbx, transform=transform)
+    except Exception as e:
+        raise ValueError(f"Error creating window for bounding box {bbx}: {e}")
+
+    # Ensure window dimensions align
+    window = window.round_offsets()
 
     # Read the cropped data using the window
     cropped_data = data[
@@ -90,6 +96,7 @@ def crop_to_bbx(data, metadata, bbx, output_path=None):
         print(f"Cropped raster saved to {output_path}")
 
     return cropped_data, cropped_metadata
+
 
 
 def calculate_shade_area(data, metadata):
