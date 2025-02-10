@@ -69,17 +69,17 @@ def las_to_tif_with_filter(las_file_path, output_tif_path, classifications, bbox
     return f"{output_tif_path} created successfully."
 
 
-tasks = [
-    {
-        "las_file_path": r"C:\Users\www\WRI-cif\Amsterdam\2023_C_25GN1.LAZ",
-        "output_tif_path": r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_aoi2_p1.tif",
-        "classifications": [6],
-    },
-    {
-        "las_file_path": r"C:\Users\www\WRI-cif\Amsterdam\2023_C_25EZ1.LAZ",
-        "output_tif_path": r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_aoi2_p2.tif",
-        "classifications": [6],
-    },
+# tasks = [
+#     {
+#         "las_file_path": r"C:\Users\www\WRI-cif\Amsterdam\2023_C_25GN1.LAZ",
+#         "output_tif_path": r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_aoi2_p1.tif",
+#         "classifications": [6],
+#     },
+#     {
+#         "las_file_path": r"C:\Users\www\WRI-cif\Amsterdam\2023_C_25EZ1.LAZ",
+#         "output_tif_path": r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\building_aoi2_p2.tif",
+#         "classifications": [6],
+#     },
     # {
     #     "las_file_path": r"C:\Users\www\WRI-cif\Amsterdam\2023_C_25GN1.LAZ",
     #     "output_tif_path": r"C:jk\Users\www\WRI-cif\Amsterdam\Laz_result\DEM_building_aoi2_p1.tif",
@@ -90,7 +90,7 @@ tasks = [
     #     "output_tif_path": r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\DEM_building_aoi2_p2.tif",
     #     "classifications": [2, 6],
     # }
-]
+# ]
 #
 # def process_task(task):
 #     return las_to_tif_with_filter(
@@ -169,7 +169,7 @@ tasks = [
 #
 #     print("Y-axis inverted successfully and saved to", output_path)
 
-def process_laz_to_tif(las_file_path, output_tif_path, resolution=1):
+def process_laz_to_tif_nan(las_file_path, output_tif_path, resolution=1):
     with laspy.open(las_file_path) as lasfile:
         las = lasfile.read()
 
@@ -221,6 +221,52 @@ def process_laz_to_tif(las_file_path, output_tif_path, resolution=1):
 # input_path = r'C:\Users\www\WRI-cif\Validation_height\lidartoras\building_test1.tif'
 # output_path = r'C:\Users\www\WRI-cif\Validation_height\lidartoras\building_i.tif'
 
+def process_laz_to_tif(las_file_path, output_tif_path, resolution=1):
+    with laspy.open(las_file_path) as lasfile:
+        las = lasfile.read()
 
+        # Extract coordinates
+        x = np.array(las.x)
+        y = np.array(las.y)
+        z = np.array(las.z)
 
-process_laz_to_tif(r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\tree_aoi2_m_db.laz", r'C:\Users\www\WRI-cif\Amsterdam\aoi2_tree_height_28992.tif', resolution=1)
+        # Calculate bounds for the output raster
+        min_x, max_x = np.min(x), np.max(x)
+        min_y, max_y = np.min(y), np.max(y)
+
+        # Expand the max bounds slightly to ensure covering the edge case
+        max_x += resolution / 2
+        max_y += resolution / 2
+
+        width = int((max_x - min_x) // resolution) + 1
+        height = int((max_y - min_y) // resolution) + 1
+
+        # Initialize grid with 0 instead of NaN
+        grid = np.zeros((height, width), dtype=np.float32)
+
+        for x_val, y_val, z_val in zip(x, y, z):
+            col = int((x_val - min_x) // resolution)
+            row = int((max_y - y_val) // resolution)
+
+            # Ensure that the indices are within the array bounds
+            row = min(row, height - 1)
+            col = min(col, width - 1)
+
+            grid[row, col] = max(grid[row, col], z_val)  # Keep highest value per cell
+
+        # Define the transformation for raster coordinates
+        transform = Affine.translation(min_x - resolution / 2, max_y + resolution / 2) * Affine.scale(resolution, -resolution)
+
+        # Write the grid to a new TIFF file
+        with rasterio.open(
+                output_tif_path, 'w', driver='GTiff',
+                height=height, width=width,
+                count=1, dtype=grid.dtype,
+                crs=CRS.from_epsg(28992).to_wkt(),
+                transform=transform
+        ) as dst:
+            dst.write(grid, 1)
+
+        print(f"Raster saved: {output_tif_path}")
+
+process_laz_to_tif(r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\aoi2\aoi2_tree_db.laz", r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\aoi2\aoi2_tree.tif", resolution=1)

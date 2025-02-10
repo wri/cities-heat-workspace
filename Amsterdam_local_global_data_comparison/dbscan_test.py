@@ -110,68 +110,6 @@ def merge_laz_files(input_file1, input_file2, output_file):
             laspy.ScaleAwarePointRecord(merged_points, point_format=merged_header.point_format, scales=merged_scales,
                                         offsets=merged_offsets))
 
-def fix_scale_offset_and_crop(input_laz_path, output_laz_path, aoi_path, correct_scale, correct_offset):
-    """
-    Fix the scale and offset of a LAZ file and crop it using the bounding box from an AOI.
-
-    Parameters:
-        input_laz_path (str): Path to the input LAZ file.
-        output_laz_path (str): Path to save the corrected and cropped LAZ file.
-        aoi_path (str): Path to the AOI geopackage layer.
-        correct_scale (tuple): Correct scale (scale_x, scale_y, scale_z).
-        correct_offset (tuple): Correct offset (offset_x, offset_y, offset_z).
-    """
-    # Load the AOI layer and get the bounding box
-    aoi = gpd.read_file(aoi_path)
-    aoi_bounds = aoi.total_bounds  # [min_x, min_y, max_x, max_y]
-
-    print(f"AOI Bounding Box: {aoi_bounds}")
-
-    # Read the input LAZ file
-    las = laspy.read(input_laz_path)
-
-    # Fix the scale and offset in the header
-    las.header.scale = correct_scale
-    las.header.offset = correct_offset
-
-    # Recalculate coordinates using the corrected scale and offset
-    x = las.X * las.header.scale[0] + las.header.offset[0]
-    y = las.Y * las.header.scale[1] + las.header.offset[1]
-
-    # Apply the AOI bounding box to filter points
-    min_x, min_y, max_x, max_y = aoi_bounds
-    mask = (x >= min_x) & (x <= max_x) & (y >= min_y) & (y <= max_y)
-
-    # Filter points based on the mask
-    cropped_points = las.points[mask]
-
-    # Create a new LAS file with the cropped points
-    cropped_las = laspy.LasData(las.header)
-    cropped_las.points = cropped_points
-
-    # Write the corrected and cropped points to the output file
-    cropped_las.write(output_laz_path)
-
-if __name__ == "__main__":
-    # Define the input and output file paths
-    input_laz = r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\tree_aoi2_m.laz"
-    output_laz = r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\aoi2_tree_m_c.laz"
-
-    # Path to the AOI geopackage
-    aoi_path = r"C:\Users\www\WRI-cif\aoi2_28992.gpkg"
-
-    # Define the correct scale and offset for EPSG:28992
-    correct_scale = (0.01, 0.01, 0.01)  # Replace with correct values if needed
-    correct_offset = (120000.0, 480000.0, 0.0)  # Replace with actual offset for EPSG:28992
-
-    # Fix the scale, offset, and crop the LAZ file
-    fix_scale_offset_and_crop(input_laz, output_laz, aoi_path, correct_scale, correct_offset)
-
-    print(f"Corrected and cropped LAZ file saved to: {output_laz}")
-
-las = laspy.read(r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\tree_aoi2_m.laz")
-print("Scale:", las.header.scale)
-print("Offset:", las.header.offset)
 
 #bounding_box = [120764.45790837877, 485845.9530135797, 122764.4639352827, 487845.9552846286]
 #crop_laz(r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\tree_aoi2_m.laz", r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\tree_aoi2.laz", bounding_box)
