@@ -57,4 +57,4 @@ def reproject_tif(input_tif, output_tif, target_crs):
     print(f"Reprojected TIFF saved to: {output_tif}")
 
 # Example usage:
-reproject_tif(r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\aoi2\aoi2_tree.tif", r"C:\Users\www\WRI-cif\Amsterdam\Laz_result\aoi2\aoi2_tree_32631.tif", "EPSG:32631")
+reproject_tif(r'C:\Users\www\WRI-cif\Amsterdam\Laz_result\aoi2\aoi2_local_dem_building.tif', r'C:\Users\www\WRI-cif\Amsterdam\Laz_result\aoi2\aoi2_local_dem_building_utm.tif', "EPSG:32631")
