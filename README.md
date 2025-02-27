@@ -1,37 +1,56 @@
-# cities-heat-workspace - building height comparison
-A brief description of what this project does and who it's for.
+# cities-heat-workspace - Building Height Comparison
 
-## Description of the method
-The Raster Cell Center Approach compares building heights by calculating the center of each raster cell and verifying whether it falls within a building footprint polygon. Only raster cells whose centers are located within the polygons contribute to the height calculations, ensuring precision and relevance in the derived measurements.
+**A brief description of what this project does and who it's for:**
+This project utilizes the Raster Cell Center Approach to compare building heights accurately within a specified area of interest. It is designed for urban planners, geospatial analysts, and researchers interested in urban morphology and building height discrepancies.
+
+## Description of the Method
+The Raster Cell Center Approach enhances building height analysis by focusing on the geometric center of each raster cell and its presence within a building footprint polygon. This technique ensures that only relevant data contributes to height assessments, significantly enhancing the accuracy and relevance of measurements.
 
 ### Analysis Workflow
-Check Cell Center Within Polygon: Evaluate whether the center of each raster cell is within a building footprint polygon.
-Height List Compilation: For cells within a polygon, compile a list of raster heights.
-Average Height Calculation: Calculate the average height from the compiled list for each building.
-Comparison: Compare the average raster-derived height to the building height noted in the vector data.
+- **Check Cell Center Within Polygon**: Verify whether the center of each raster cell lies within a building footprint polygon.
+- **Height List Compilation**: Compile a list of heights for raster cells whose centers are inside a polygon.
+- **Average Height Calculation**: Calculate the average height from the compiled list for each building.
+- **Comparison**: Compare the calculated average raster-derived height to the recorded building height in the vector data.
 
-### Advantages:
-Avoids biases typical of rasterization by focusing solely on cell centers within building footprints.
-Adaptable to buildings of varying sizes, shapes, and footprints, providing flexibility across diverse urban settings.
-Do not need manual preprocessing of the input layers
+### Advantages
+- **Precision**: Focuses solely on cell centers within building footprints to avoid biases introduced by rasterization.
+- **Adaptability**: Suitable for buildings of various sizes, shapes, and footprints, offering broad applicability across different urban settings.
+- **Ease of Use**: Does not require manual preprocessing of the input layers, streamlining the analysis process.
 
 ## Data Requirements
-### The input data should include three parts:
+### Input Data
+- **Area of Interest**:
+  - **Recommended size**: 2km by 2km to manage processing time efficiently.
+  - **Acceptable formats**: Any format readable by geopandas, such as GeoJSON or GeoPackage.
+  - **CRS impact**: Determines the CRS used in calculations and results.
 
-An area of interest (recommended size is 2km by 2km to avoid long processing time). The file can be in any format that can be read by geopandas (like geojson or geopackage). The CRS of this file will determine the CRS in the calculation process and in the result. 
+- **Vector Building Height Dataset**:
+  - **Attribute requirements**: Must include an attribute for building height, potentially labeled as any of the following:
+    - 'height', 'Height', 'heights', 'Heights'
+    - 'building heights', 'Building heights'
+    - 'building_height', 'Building_height'
+    - 'building_heights', 'Building_heights'
+  - - **Size requirements**: Should at least cover the AOI but may extend beyond it.
 
-A vector building height dataset that contains the attribute for building height, named in any of the following: 
+- **DSM Raster Layer**:
+  - **Resolution/CRS**: Can be in any resolution or CRS.
+  - **Size requirements**: Should at least cover the AOI but may extend beyond it.
 
-'height', 'Height', 'heights', 'Heights', 'building heights', 'Building heights',
-'building_height', 'Building_height', 'building_heights', 'Building_heights'
+### Output Files
+- **CSV File**:
+  - **Contents**: Includes building ID, maximum, minimum, average, standard deviation, number of points, and the difference between the average height of the points and the polygon's height.
+  - **Usage**: Facilitates detailed statistical analysis per building.
 
-A DSM raster layer, which can be in any resolution or CRS. Both the building height vector layer and the DSM raster should be at least the same size as the AOI, but they can also contain extent much bigger than the AOI. 
+- **Updated Building Height Vector Dataset**:
+  - **New attribute**: Contains a newly added attribute detailing the difference in height between the raster-derived average and the vector-specified building height.
 
-### It will generate two output files:
+## How to Run
 
-A csv file containing the following attributes per building polygon: building ID, maximum value of the height for all cell center points, minimum, average, sd, number of points, difference between the average height of the points and the height of the polygon. Statistics per building. 
+To execute the project, follow these steps in `main.py`:
 
-The updated building height vector dataset with an added attribute for the difference in height between the average points height within a polygon and the building height. 
-
-## How to run:
-in main.py. replace the input and output files. input file paths can be a local path or an s3 link, the output paths should be locally. 
+- **Replace the Input and Output File Paths**: Specify the paths for your input and output files. Input file paths can be either a local file path or an S3 link. However, ensure that output paths are local.
+  
+  Example of setting file paths in `main.py`:
+  ```python
+  input_path = "path/to/your/input/file.geojson"  # Local or S3 link
+  output_path = "path/to/your/output/file.csv"    # Must be local
