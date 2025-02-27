@@ -29,7 +29,7 @@ The Raster Cell Center Approach enhances building height analysis by focusing on
     - 'building heights', 'Building heights'
     - 'building_height', 'Building_height'
     - 'building_heights', 'Building_heights'
-  - - **Size requirements**: Should at least cover the AOI but may extend beyond it.
+  - **Size requirements**: Should at least cover the AOI but may extend beyond it.
 
 - **DSM Raster Layer**:
   - **Resolution/CRS**: Can be in any resolution or CRS.
