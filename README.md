@@ -58,5 +58,5 @@ raster_path = 'path/to/your/raster/data.tif'
 aoi_path = 'path/to/your/area/of/interest.geojson'
 
 # Output paths for the results
-output_csv_path = r'C:\Users\Documents\Amsterdam_data\Height_validation\AMS_UTGLOBUS.csv'
-output_vector_path = r'C:\Users\Documents\Amsterdam_data\Height_validation\AMS_UTGLOBUS.GPKG'
+output_csv_path = 'path/to/your/statistics.csv'
+output_vector_path = 'path/to/your/updated_building_height.gpkg'
