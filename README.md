@@ -1,6 +1,5 @@
 # cities-heat-workspace - Building Height Comparison
 
-**A brief description of what this project does and who it's for:**
 This project utilizes the Raster Cell Center Approach to compare building heights accurately within a specified area of interest. It is designed for urban planners, geospatial analysts, and researchers interested in urban morphology and building height discrepancies.
 
 ## Description of the Method
@@ -46,11 +45,18 @@ The Raster Cell Center Approach enhances building height analysis by focusing on
 
 ## How to Run
 
-To execute the project, follow these steps in `main.py`:
+To execute the project, you will need to set up your input and output file paths in `main.py`. Below is an example of how to specify these paths:
 
-- **Replace the Input and Output File Paths**: Specify the paths for your input and output files. Input file paths can be either a local file path or an S3 link. However, ensure that output paths are local.
-  
-  Example of setting file paths in `main.py`:
-  ```python
-  input_path = "path/to/your/input/file.geojson"  # Local or S3 link
-  output_path = "path/to/your/output/file.csv"    # Must be local
+```python
+# Path to the vector data file
+vector_path = 'path/to/your/vector/data.gpkg'
+
+# Path to the raster data file
+raster_path = 'path/to/your/raster/data.tif'
+
+# Path to the area of interest file
+aoi_path = 'path/to/your/area/of/interest.geojson'
+
+# Output paths for the results
+output_csv_path = r'C:\Users\Documents\Amsterdam_data\Height_validation\AMS_UTGLOBUS.csv'
+output_vector_path = r'C:\Users\Documents\Amsterdam_data\Height_validation\AMS_UTGLOBUS.GPKG'
