@@ -44,7 +44,7 @@ end_mean_alb = end_alb.mean()
 delta_alb = end_mean_alb - start_mean_alb
 
 # green space
-green = (lulc+canopyheight)*(lulc==5)
+green = (lulc*(lulc==5))+canopyheight
 perc_green = ((np.count_nonzero(green))/(green.size))*100
 
 # streets
