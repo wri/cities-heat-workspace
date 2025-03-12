@@ -43,7 +43,7 @@ The functions in **`check_raster_for_solweig.py`** align the input rasters and p
   - **Input:** List of raster file paths.
   - **Output:** List of aligned raster file paths (except the reference raster).
 
-- **`check_raster_layers`** → Prints out the **CRS, resolution, origin, shape**, and **bounding box (BBX) in EPSG:4326** for inclusion in the **YAML file of the CTCM setup**.
+- **`check_raster_layers`** → Prints out the **CRS, resolution, origin, shape**, and **bounding box (BBX) in EPSG:4326** for inclusion in the **YML file of the CTCM setup**.
 
 ## Analysis of the CTCM Result - Shadow
 This part of the analysis **generates statistics and difference maps** of the CTCM results. It does **not** include running the model.
