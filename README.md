@@ -1,6 +1,6 @@
 # cities-heat-workspace - Building Height Comparison
 
-This project utilizes the Raster Cell Center Approach to compare building heights accurately within a specified area of interest. It is designed for urban planners, geospatial analysts, and researchers interested in urban morphology and building height discrepancies.
+This project utilizes the Raster Cell Center Approach to compare building heights accurately within a specified area of interest. 
 
 ## Description of the Method
 The Raster Cell Center Approach enhances building height analysis by focusing on the geometric center of each raster cell and its presence within a building footprint polygon. This technique ensures that only relevant data contributes to height assessments, significantly enhancing the accuracy and relevance of measurements.
