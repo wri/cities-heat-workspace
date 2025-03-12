@@ -5,7 +5,7 @@ In this branch of Amsterdam_comparison, the scripts are designed to do the prepa
 combine_dem_builidng.py takes two inputs - the DEM and building rasters, and output the result of putting building layer on top of the DEM. 
 The building height layers tested with this script were rasterized vectors of buildings or rasterized point cloud from LiDAR data. The cells without building height are therefore wirtten as nodata. The DEM raster is first aligned and cropped to the building raster layer, filled with IDW interpolation in case there are empty cells. The building height values are finally put on top of the DEM layer. 
 
-### Generating global data (vector to raster; smooth nasadem)
+### Generating global data (vector to raster)
 rasterize_gpkg.py is used on global building heght datasets which are usually gpkg files, to rasterize to the self-defined resolution and write the height of each building polygon to the rasterized cells. It also does cropping if you provide an aoi gpkg, which means the gpkg do not need to be preprocessed. 
 To use it, it takes four parameters, input_gpkg is the file path to the building height, which should contain an attribute called height. aoi_gpkg is the file path for the aoi. The bounding box of the aoi defines the bbx of the output file. The output_tif is the path for the output tif file. Finally, the resolution can defined; by default, it is 1. 
 
@@ -51,3 +51,129 @@ tmrt_maps_agg.py generates the aggregation of UTCI difference maps by resolution
 print_map.py can be used to create jnp format images from the raster layers taken as input. There are several legend styles, including shade, temp, tree_height, building_height, utci, utci_diff_reclass. Shade and utci_diff_reclass show discrete legend, while the other legend types are all continuous legend. To use the utci_diff_reclass, it is required to generate this reclassfied utci difference with the another script first (reclass_for_printing_map.py). 
 To run this script, it takes four parameters. Input folder should contain the same structure mentioned earlier, so subfolders with run name including the tif files. It also requires an inset map that should be prepared in advance, in png format. The output path is a folder, and the output folder will have the same structure as the input file. Last but not least, do't forget to specify the legend style. 
 reclass_for_printing_map.py reclassifies the UTCI raster to bins. The bins for now are hardcoded still. 
+# cities-heat-workspace - Amsterdam CTCM Result Comparison: Local vs Global Data
+
+In this branch, **`Amsterdam_comparison`**, the scripts are designed for **data preparation, preprocessing, and analysis of the CTCM results**. Instead of a complete workflow with a main function, the scripts contain **separate functions** that are used **individually or in groups**.
+
+## Data Preparation
+
+### Combining DEM and Building Height Data
+**`combine_dem_building.py`** takes two inputs:  
+- **DEM raster**  
+- **Building height raster**  
+
+It outputs a raster where the **building height layer is placed on top of the DEM**.  
+
+- The building height layers tested in this script were **rasterized vectors of buildings** or **rasterized point clouds from LiDAR data**.  
+- Cells without building height values are written as **NoData**.  
+- The **DEM raster is first aligned and cropped** to match the building raster layer.  
+- **IDW interpolation** is used to fill empty DEM cells before overlaying the building height values.  
+
+---
+
+### **Generating Global Data (Vector to Raster)**
+**`rasterize_gpkg.py`** is used to process **global building height datasets** (usually **GPKG** files) by **rasterizing them** at a user-defined resolution. It also performs cropping if an **AOI GPKG** is provided, eliminating the need for preprocessing.
+
+**Usage:**  
+```python
+rasterize_gpkg.py input_gpkg output_tif aoi_gpkg resolution
+```
+- **`input_gpkg`** → Path to the building height dataset, containing an attribute called `"height"`.  
+- **`aoi_gpkg`** → Path to the **area of interest (AOI)** file. The bounding box of this AOI defines the extent of the output file.  
+- **`output_tif`** → Path to the output raster file.  
+- **`resolution`** → (Optional) Raster resolution (default = **1m**).  
+
+---
+
+### **Generating Local Data (Point Cloud to Raster)**
+#### **Extracting Tree Height from LiDAR**
+**`dbscan_test.py`** extracts tree heights from **LiDAR data** (`.laz` format).  
+- It was **only tested in Amsterdam**, so its compatibility with **other CRS** (besides `EPSG:28992`) is **not guaranteed**.  
+- It **clusters and removes noise** in **2D** using **DBSCAN**.  
+
+**Parameters:**
+- **`min_area_m2`** → Minimum cluster area (default = `4m²`).  
+- **`eps`** → Minimum distance between two clusters (default = `1`).  
+- **`min_samples`** → Minimum number of points per cluster (default = `50`).  
+
+#### **Converting LiDAR Point Cloud to Raster**
+**`laz_to_tif.py`** converts a **LAZ point cloud** into a raster by storing the **highest z-value** in each cell.
+
+**Usage:**
+```python
+laz_to_tif.py input.laz output.tif resolution
+```
+- **`input.laz`** → Path to the input **LiDAR** file.  
+- **`output.tif`** → Path to the output **raster**.  
+- **`resolution`** → (Optional) Grid resolution (default = **1m**).  
+
+---
+
+## Preprocessing
+
+### **Aligning Input Layers**
+**`check_raster_for_solweig.py`** ensures that input raster layers are aligned.
+
+- **`align_rasters`** → Aligns the **transform, CRS, and shape** of raster layers.  
+  - The **first file in the input list** serves as the reference and does **not** have an output.  
+  - **Input:** List of raster file paths.  
+  - **Output:** List of aligned raster file paths (except the reference raster).  
+
+- **`check_raster_layers`** → Prints out the CRS, resolution, origin, shape, and **bounding box (BBX)** of rasters in `EPSG:4326`, required for CTCM's YAML setup.  
+
+---
+
+## **CTCM Result Analysis - Shadow**
+
+This analysis **generates statistics and difference maps** of **CTCM shadow results**. It does **not** include running the model.
+
+### **Folder Structure for Analysis**
+- Create a **main folder** for **different scenarios** for the **same AOI**.
+- Each run’s results (shadow maps at **12:00, 15:00, 18:00** and **TmrT maps**) go into **subfolders** named after the run.
+- **Example Folder Structure:**
+  ![image](https://github.com/user-attachments/assets/6531fde7-0893-483a-b6d9-e9d21ffc13d8)
+  ![image](https://github.com/user-attachments/assets/8a37ed7b-35f0-4c3e-bdd4-fa9f368db10c)
+
+### **Statistics (Non-Spatial)**
+**`shade_area_calculation.py`** generates **non-spatial statistics** of all shadow results.  
+
+- Outputs an **Excel file** with:
+  - **Total shade area**  
+  - **Percentage of different shade types**  
+  - **Difference from baseline**  
+
+**Usage:**  
+```python
+shade_area_calculation.py input_folder output.xlsx baseline_subfolder buffer_size
+```
+- The **default buffer size** is `500m`.  
+
+---
+
+## **Result Visualization**
+
+### **Generating Printable Maps**
+**`print_map.py`** creates `.png` images from raster layers.  
+
+- Supported **legend styles**:
+  - `shade`
+  - `temp`
+  - `tree_height`
+  - `building_height`
+  - `utci`
+  - `utci_diff_reclass` (**requires `reclass_for_printing_map.py`**)  
+
+**Usage:**
+```python
+print_map.py input_folder inset_map.png output_folder legend_style
+```
+
+---
+
+### **Reclassifying UTCI for Visualization**
+**`reclass_for_printing_map.py`** creates **binned UTCI difference maps** for better readability.  
+
+- **Current bins are hardcoded** and may need customization.
+
+---
+
