@@ -99,9 +99,9 @@ def rasterize_gpkg(input_file, output_file, aoi_file, resolution=1, value_column
 
     return output_file
 
-input_gpkg = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\UT_Amsterdam.gpkg"
-aoi_gpkg = r"https://wri-cities-heat.s3.us-east-1.amazonaws.com/NLD-Amsterdam/AOI_1_utm.gpkg"
-output_tif = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_AOI1.tif"
+input_gpkg = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Height_validation\aoi1_overture_height_utm1.geojson"
+aoi_gpkg = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS/AOI_1_utm.gpkg"
+output_tif = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Height_validation\overture_building_utm.tif"
 resolution = 1
 
 rasterize_gpkg(input_gpkg, output_tif, aoi_gpkg, resolution)

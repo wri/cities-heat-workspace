@@ -2,6 +2,47 @@ import rasterio
 from rasterio.transform import Affine
 from rasterio.warp import reproject, Resampling, transform_bounds
 
+import rasterio
+import numpy as np
+
+def fill_and_set_nodata(raster_path, output_path, fill_value=0, new_nodata=-9999):
+    with rasterio.open(raster_path) as src:
+        # Read the data and nodata value from the source raster
+        nodata = src.nodata
+        data = src.read(1, masked=True)  # Read the first band data as masked array
+
+        # Fill the nodata areas with the specified fill_value
+        if nodata is not None:
+            data = np.where(data.mask, fill_value, data)  # Fill original nodata with fill_value
+
+        # More aggressive edge handling to remove nodata values
+        # Fill additional rows and columns around the edge if necessary
+        data[:, 0:2] = fill_value  # Fill the first two columns
+        data[:, -2:] = fill_value  # Fill the last two columns
+        data[0:2, :] = fill_value  # Fill the first two rows
+        data[-2:, :] = fill_value  # Fill the last two rows
+
+        # Update the profile to change the nodata value
+        profile = src.profile
+        profile['nodata'] = new_nodata
+        profile['transform'] = src.transform
+        profile['width'] = data.shape[1]
+        profile['height'] = data.shape[0]
+
+        # Write the updated data to a new raster file
+        with rasterio.open(output_path, 'w', **profile) as dst:
+            # Replace old nodata with new nodata in the data array
+            data = np.where(data == nodata, new_nodata, data)
+            dst.write(data, 1)  # Write data back to disk
+
+
+
+
+# Example usage
+# input_raster = r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem.tif'
+# output_raster = r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem_test.tif'
+# fill_and_set_nodata(input_raster, output_raster)
+
 def set_raster_origin_to_integer(raster_path, output_path):
     with rasterio.open(raster_path) as src:
         # Read the original affine transform
@@ -23,13 +64,8 @@ def set_raster_origin_to_integer(raster_path, output_path):
 
 
 def align_rasters(input_rasters, output_rasters):
-    # Set the origin of the first raster to integer coordinates and define it as the reference
-    first_raster_path = input_rasters[0]
-    first_output_path = output_rasters[0]
-    set_raster_origin_to_integer(first_raster_path, first_output_path)
-
-    # Open the first raster as reference
-    with rasterio.open(first_output_path) as ref:
+    # Open the first raster as the reference but do not change or output it
+    with rasterio.open(input_rasters[0]) as ref:
         ref_transform = ref.transform
         ref_crs = ref.crs
         ref_shape = (ref.height, ref.width)
@@ -43,15 +79,19 @@ def align_rasters(input_rasters, output_rasters):
                 'crs': ref_crs,
                 'transform': ref_transform,
                 'width': ref_shape[1],
-                'height': ref_shape[0]
+                'height': ref_shape[0],
+                'dtype': src.dtypes[0]  # Ensure dtype matches
             })
 
             # Reproject and write each band
             with rasterio.open(dst_path, 'w', **profile) as dst:
                 for i in range(1, src.count + 1):
+                    # Create an empty array for the destination data
+                    dest_array = np.empty((ref_shape[0], ref_shape[1]), dtype=src.dtypes[0])
+
                     reproject(
                         source=rasterio.band(src, i),
-                        destination=rasterio.band(dst, i),
+                        destination=dest_array,
                         src_transform=src.transform,
                         src_crs=src.crs,
                         dst_transform=ref_transform,
@@ -59,12 +99,11 @@ def align_rasters(input_rasters, output_rasters):
                         resampling=Resampling.nearest
                     )
 
+                    # Write the reprojected data to the output raster
+                    dst.write(dest_array, indexes=i)
 
-# Example usage
-# input_rasters = [r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem_utm_f.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem_building_utm_f.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_tree_utm.tif']
-# output_rasters = [r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem_i.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem_building_i.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_tree_i.tif']
-# align_rasters(input_rasters, output_rasters)
-#
+
+
 
 def check_raster_layers(layers):
     reference_crs = None
@@ -85,6 +124,7 @@ def check_raster_layers(layers):
 
             # Check resolution
             res_x, res_y = src.res
+            print(res_x,res_y)
             if res_x != 1 or res_y != 1:
                 print(f"Resolution issue in {layer}: found resolution ({res_x}, {res_y}), expected (1, 1)")
                 continue
@@ -112,5 +152,14 @@ def check_raster_layers(layers):
 
 
 # Example usage
-raster_layers = [r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem_i.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem_building_i.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_tree_i.tif']
-check_raster_layers(raster_layers)
+if __name__ == '__main__':
+    input_rasters = [r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_AOI1.tif',
+                     r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_NASADEM_AOI1.tif',
+                     r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\all-street-trees-90pctl-achievable.tif']
+    output_rasters = [None,
+                      r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi1_dem.tif',
+                      r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi1_street_tree.tif']
+    align_rasters(input_rasters, output_rasters)
+# Example usage
+# raster_layers = [r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem_i.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_local_dem_building_i.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source/aoi2_tree_i.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\aoi2_source\cif_lulc.tif']
+# check_raster_layers(raster_layers)

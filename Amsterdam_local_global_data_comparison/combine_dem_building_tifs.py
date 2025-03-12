@@ -299,5 +299,5 @@ def process_divided_patches(dem1_path, dem2_path, building1_path, building2_path
 # print("Final combined DEM and building saved at:", final_output)
 
 
-align_and_crop_dem_to_building(r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\NasaDEM_smoothed.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_AOI1.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\NASADEM_AOI1_s_c.tif')
-combine_dem_and_building(r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\NASADEM_AOI1_s_c.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_AOI1.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_NASADEM_AOI1.tif')
+#align_and_crop_dem_to_building(r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile002\NasaDEM_smoothed.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\UTbuilding_AOI1.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\NASADEM_AOI1_s_c.tif')
+combine_dem_and_building(r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\Tile001\NASADEM_AOI1_s_c.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Height_validation\overture_building_utm.tif', r'C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Height_validation\aoi1_overture_dem.tif')

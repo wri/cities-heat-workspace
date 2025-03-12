@@ -307,10 +307,11 @@ def process_shade_maps(main_folder, output_excel, edge_buffer=500, baseline_subf
     # Save all results to Excel
     save_results_to_excel(output_excel, results, baseline_subfolder)
 
+if __name__ == '__main__':
+    process_shade_maps(
+        main_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\street_tree_scenario\ams_aoi1_street_tree",
+        output_excel=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\street_tree_scenario\aoi1_street_tree_shade.xlsx",
+        edge_buffer=500,
+        baseline_subfolder='aoi1_global'
+    )
 
-process_shade_maps(
-    main_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results",
-    output_excel=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\shade_update2.xlsx",
-    edge_buffer=500,
-    baseline_subfolder = 'aoi1_all_local_auto'
-)

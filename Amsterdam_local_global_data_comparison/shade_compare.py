@@ -141,7 +141,7 @@ def align_raster(source_data, source_meta, target_data, target_meta):
             src_crs=source_meta_clipped['crs'],
             dst_transform=target_meta['transform'],
             dst_crs=target_meta['crs'],
-            resampling=Resampling.bilinear,  # Adjust resampling method as needed
+            resampling=Resampling.nearest,  # Adjust resampling method as needed
         )
 
         return aligned_data
@@ -171,11 +171,10 @@ def save_difference_raster(data, metadata, output_path):
         dst.write(data.astype('float32'), 1)
     print(f"Difference raster saved: {output_path}")
 
+if __name__ == '__main__':
+    main_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\street_tree_scenario\ams_aoi1_street_tree"  # Folder containing all runs
+    output_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\street_tree_scenario\aoi1_street_tree_diff"  # Folder to save difference maps
+    base_run = "aoi1_global"  # Subfolder name of the base run
+    edge_buffer = 500  # Buffer distance in meters
 
-# main_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results"  # Folder containing all runs
-# output_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_diff_maps"  # Folder to save difference maps
-# base_run = "aoi1_all_local_auto"  # Subfolder name of the base run
-# edge_buffer = 500  # Buffer distance in meters
-#
-#
-# overlay_and_calculate_difference(main_folder, output_folder, base_run, edge_buffer)
+    overlay_and_calculate_difference(main_folder, output_folder, base_run, edge_buffer)

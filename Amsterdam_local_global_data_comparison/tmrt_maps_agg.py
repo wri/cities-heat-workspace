@@ -48,9 +48,9 @@ def align_raster(source_data, source_meta, base_data, base_meta, resolution=1.0)
     )
 
     # Print debug information
-    print("DEBUG: Source Metadata:", source_meta)
-    print("DEBUG: Base Metadata:", base_meta)
-    print("DEBUG: Aligned Shape:", aligned_data.shape)
+    # print("DEBUG: Source Metadata:", source_meta)
+    # print("DEBUG: Base Metadata:", base_meta)
+    # print("DEBUG: Aligned Shape:", aligned_data.shape)
 
     return aligned_data
 
@@ -268,7 +268,8 @@ def batch_resample_tmrt_maps(diff_folder, aggr_folder, resolutions, methods):
 #     compare_utci=True
 # )
 
-batch_resample_tmrt_maps(diff_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_diff",
-                         aggr_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_aggr",
-                         resolutions= [5, 10, 15, 25, 30],
-                         methods=["bilinear", "average"])
+if __name__ == '__main__':
+    batch_resample_tmrt_maps(diff_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_diff",
+                             aggr_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_aggr",
+                             resolutions=[5, 10, 15, 25, 30],
+                             methods=["bilinear", "average"])

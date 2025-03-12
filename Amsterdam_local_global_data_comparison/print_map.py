@@ -288,9 +288,16 @@ def batch_process_maps(input_folder, inset_path, output_folder, legend_style="sh
 #     legend_style="utci"  # Or "temp" for a continuous legend
 # )
 #output_file= r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\all_global_shadow_12.tif",
-batch_process_maps(
-    input_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_reclass\utci_global_diff_aggr",  # Folder containing .tif files
-    inset_path=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png",  # Path to inset map image
-    output_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_reclass\utci_global_diff_aggr",  # Folder to save output maps
-    legend_style="utci_diff_reclass"  # Or "temp" for a continuous legend
-)
+
+if __name__ == '__main__':
+    batch_process_maps(
+        input_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_reclass\utci_global_diff_aggr",
+        # Folder containing .tif files
+        inset_path=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\inset_aoi1.png",
+        # Path to inset map image
+        output_folder=r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\print_maps\utci_reclass\utci_global_diff_aggr",
+        # Folder to save output maps
+        legend_style="utci_diff_reclass"  # Or "temp" for a continuous legend
+    )
+
+C:\Users\zhuoyue.wang\Documents\Amsterdam_data\aoi2_street_tree_utci_diff

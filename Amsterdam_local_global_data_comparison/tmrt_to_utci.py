@@ -389,8 +389,8 @@ def process_tmrt_to_utci(main_folder, output_folder, met_file, edge_buffer=500):
 
 if __name__ == "__main__":
     # Define input/output directories and meteorological data file
-    input_main_dir = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_results"
-    output_main_dir = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_full"
+    input_main_dir = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\street_tree_scenario\ams_aoi1_street_tree"
+    output_main_dir = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\aoi1_street_tree_utci"
     met_file = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\met_era5_hottest_days - Copy.txt"
 
     # Execute processing

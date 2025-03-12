@@ -148,10 +148,7 @@ def overlay_and_calculate_difference_utci(main_folder, output_folder, base_run):
             print(f"Saved difference map to {output_path}")
 
 
-main_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci"  # Folder containing all runs
-output_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\Solweig_AMS\aoi1_utci_diff"  # Folder to save difference maps
-base_run = "aoi1_all_local_auto"
-overlay_and_calculate_difference_utci(main_folder, output_folder, base_run)
+
 
 
 def batch_resample_utci_maps(diff_folder, aggr_folder, resolutions, methods):
@@ -281,7 +278,16 @@ def save_results_to_excel(file_path, results):
     df.to_excel(file_path, index=False)
     print(f"Results successfully saved to {file_path}")
 
+# if __name__ == '__main__':
+#     main_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\aoi1_street_tree_utci"  # Folder containing all runs
+#     output_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\aoi1_street_tree_utci_diff"  # Folder to save difference maps
+#     base_run = "aoi1_global"
+#     overlay_and_calculate_difference_utci(main_folder, output_folder, base_run)
 
-# main_folder = "path_to_utci_data"
-# output_excel = "path_to_output_stats.xlsx"
-# process_utci_maps(main_folder, output_excel)
+if __name__ == '__main__':
+    main_folder = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\aoi1_street_tree_utci"
+    output_excel = r"C:\Users\zhuoyue.wang\Documents\Amsterdam_data\street_tree_scenario\aoi1_utci.xlsx"
+    base_run = "aoi1_global"
+    process_utci_maps(main_folder, output_excel, base_run)
+
+
