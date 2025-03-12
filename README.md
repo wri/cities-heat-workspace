@@ -8,6 +8,8 @@ In this branch of Amsterdam_comparison, the scripts are designed to do the prepa
 
 ## Preprocessing
 ### Aligning the input layers
+The functions in check_raster_for_solweig.py align the input rasters and print out their information. 
+*The function align_rasters align the input raster layers' transform, crs, and shape. It takes a list of input raster file paths, and another list for the output raster file paths. 
 
 ## Analysis of the ctcm result - shadow
 ### Statistics (non-spatial)
