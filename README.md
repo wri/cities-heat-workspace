@@ -22,6 +22,8 @@ The functions in check_raster_for_solweig.py align the input rasters and print o
 *The function check_raster_layers print out the crs, resolution, origin, and shape of the input files, as well as the bounding box (bbx) of the rasters in EPSG:4326 to be put in the yml file of the ctcm setup. The parameter is a list of input file paths. 
 
 ## Analysis of the ctcm result - shadow
+![image](https://github.com/user-attachments/assets/6531fde7-0893-483a-b6d9-e9d21ffc13d8)
+
 ### Statistics (non-spatial)
 ### Overlaying rasters for the difference map
 
