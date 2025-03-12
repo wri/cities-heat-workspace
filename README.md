@@ -74,14 +74,7 @@ It outputs a raster where the **building height layer is placed on top of the DE
 ### **Generating Global Data (Vector to Raster)**
 **`rasterize_gpkg.py`** is used to process **global building height datasets** (usually **GPKG** files) by **rasterizing them** at a user-defined resolution. It also performs cropping if an **AOI GPKG** is provided, eliminating the need for preprocessing.
 
-**Usage:**  
-```python
-rasterize_gpkg.py input_gpkg output_tif aoi_gpkg resolution
-```
-- **`input_gpkg`** → Path to the building height dataset, containing an attribute called `"height"`.  
-- **`aoi_gpkg`** → Path to the **area of interest (AOI)** file. The bounding box of this AOI defines the extent of the output file.  
-- **`output_tif`** → Path to the output raster file.  
-- **`resolution`** → (Optional) Raster resolution (default = **1m**).  
+This script runs with **hardcoded paths**, meaning the input and output file paths must be defined within the script itself before execution.
 
 ---
 
@@ -91,21 +84,10 @@ rasterize_gpkg.py input_gpkg output_tif aoi_gpkg resolution
 - It was **only tested in Amsterdam**, so its compatibility with **other CRS** (besides `EPSG:28992`) is **not guaranteed**.  
 - It **clusters and removes noise** in **2D** using **DBSCAN**.  
 
-**Parameters:**
-- **`min_area_m2`** → Minimum cluster area (default = `4m²`).  
-- **`eps`** → Minimum distance between two clusters (default = `1`).  
-- **`min_samples`** → Minimum number of points per cluster (default = `50`).  
-
 #### **Converting LiDAR Point Cloud to Raster**
 **`laz_to_tif.py`** converts a **LAZ point cloud** into a raster by storing the **highest z-value** in each cell.
 
-**Usage:**
-```python
-laz_to_tif.py input.laz output.tif resolution
-```
-- **`input.laz`** → Path to the input **LiDAR** file.  
-- **`output.tif`** → Path to the output **raster**.  
-- **`resolution`** → (Optional) Grid resolution (default = **1m**).  
+This script also runs with **hardcoded paths** that must be modified before execution.
 
 ---
 
@@ -114,12 +96,7 @@ laz_to_tif.py input.laz output.tif resolution
 ### **Aligning Input Layers**
 **`check_raster_for_solweig.py`** ensures that input raster layers are aligned.
 
-- **`align_rasters`** → Aligns the **transform, CRS, and shape** of raster layers.  
-  - The **first file in the input list** serves as the reference and does **not** have an output.  
-  - **Input:** List of raster file paths.  
-  - **Output:** List of aligned raster file paths (except the reference raster).  
-
-- **`check_raster_layers`** → Prints out the CRS, resolution, origin, shape, and **bounding box (BBX)** of rasters in `EPSG:4326`, required for CTCM's YAML setup.  
+This script uses hardcoded file paths, so users need to manually update them within the script.
 
 ---
 
@@ -142,11 +119,7 @@ This analysis **generates statistics and difference maps** of **CTCM shadow resu
   - **Percentage of different shade types**  
   - **Difference from baseline**  
 
-**Usage:**  
-```python
-shade_area_calculation.py input_folder output.xlsx baseline_subfolder buffer_size
-```
-- The **default buffer size** is `500m`.  
+This script runs with **hardcoded paths**, meaning the user must edit the file before running it.
 
 ---
 
@@ -155,18 +128,7 @@ shade_area_calculation.py input_folder output.xlsx baseline_subfolder buffer_siz
 ### **Generating Printable Maps**
 **`print_map.py`** creates `.png` images from raster layers.  
 
-- Supported **legend styles**:
-  - `shade`
-  - `temp`
-  - `tree_height`
-  - `building_height`
-  - `utci`
-  - `utci_diff_reclass` (**requires `reclass_for_printing_map.py`**)  
-
-**Usage:**
-```python
-print_map.py input_folder inset_map.png output_folder legend_style
-```
+This script requires users to manually define input paths within the script before execution.
 
 ---
 
@@ -176,4 +138,7 @@ print_map.py input_folder inset_map.png output_folder legend_style
 - **Current bins are hardcoded** and may need customization.
 
 ---
+
+### **Final Notes**
+All scripts in this repository rely on **hardcoded paths**, meaning that users need to **modify the input and output file paths inside the script** before execution. This setup avoids the need for command-line arguments but requires manual adjustments per use case.
 
