@@ -10,6 +10,7 @@ In this branch of **`Amsterdam_comparison`**, the scripts are designed for **dat
 The building height layers tested with this script were **rasterized vectors of buildings** or **rasterized point clouds from LiDAR data**. Cells without building height values are therefore written as **NoData**. The **DEM raster is first aligned and cropped** to the building raster layer and filled with **IDW interpolation** in case of empty cells. The building height values are finally placed on top of the DEM layer.
 
 ### Generating Global Data (Vector to Raster)
+**`write_building_height_to_overture.py`** writes building height data from another gpkg (eg. UTGLOBUS) to the overture buildings. It joins the two tables. 
 **`rasterize_gpkg.py`** is used on **global building height datasets**, which are usually **GPKG files**, to rasterize them to a **user-defined resolution** and write the height of each building polygon to the rasterized cells. It also performs **cropping** if an **AOI GPKG** is provided, meaning that the **GPKG does not need to be preprocessed**.
 
 **Parameters:**
