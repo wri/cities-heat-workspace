@@ -27,6 +27,7 @@ def process_raster_layer(
     year: str,
     destination_bucket: str,
     destination_path: str,
+    data_dir: str,
     dry_run: bool = False,
 ) -> Union[str, None]:
     """
@@ -37,7 +38,7 @@ def process_raster_layer(
     uploads the TIF and COG to the specified S3 location.
     """
     try:
-        DATA_DIR = "/Users/raghuram.bk/Downloads"
+        os.makedirs(data_dir, exist_ok=True)
 
         # Standard preprocessing
         layer_filename_without_extension, error = generate_raster_layer_filename(
@@ -48,11 +49,11 @@ def process_raster_layer(
         layer_filename = f"{layer_filename_without_extension}.tif"
 
         local_tif_path_with_filename = (
-            os.path.join(DATA_DIR, layer_filename_without_extension) + "_tif.tif"
+            os.path.join(data_dir, layer_filename_without_extension) + "_tif.tif"
         )
 
         local_cog_path_with_filename = (
-            os.path.join(DATA_DIR, layer_filename_without_extension) + "_cog.tif"
+            os.path.join(data_dir, layer_filename_without_extension) + "_cog.tif"
         )
         s3_tif_path_with_filename = os.path.join(
             destination_path, "tif", layer_filename
@@ -72,7 +73,7 @@ def process_raster_layer(
 
         local_source_files = []
         for source_url in source_urls:
-            local_source_filename = os.path.join(DATA_DIR, os.path.basename(source_url))
+            local_source_filename = os.path.join(data_dir, os.path.basename(source_url))
             local_source_files.append(local_source_filename)
 
             print(f"Downloading {source_url} to {local_source_filename}")
@@ -438,6 +439,14 @@ if __name__ == "__main__":
         description="Generates raster layers for the CCL and CID applications given a city ID, AOI ID and scenario",
     )
     parser.add_argument(
+        "-dd",
+        "--data_dir",
+        help="Specify a local data directory in which to store downloaded and generated files.",
+        action="store",
+        dest="data_dir",
+        required=True,
+    )
+    parser.add_argument(
         "-c",
         "--city_id",
         help="Specify the city_id for which the layers need to be generated",
@@ -480,6 +489,7 @@ if __name__ == "__main__":
     layer_id = args.layer_id
     dry_run = args.dry_run
     scenario = args.scenario
+    data_dir = args.data_dir
 
     baseline_layers = [
         {
@@ -1097,36 +1107,36 @@ if __name__ == "__main__":
             "year": "2025",
             "s3_folder": "data/prd/utci",
         },
-        # {
-        #     "url": [
-        #         f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/aoi.geojson",
-        #         f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/baseline/non_buildings_areas.tif",
-        #         f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/cool-roofs/utci_1200_cool_roofs_achievable.tif",
-        #     ],
-        #     "layer_id": "utci_1200_cool_roofs_non_buildings",
-        #     "year": "2025",
-        #     "s3_folder": "data/prd/utci",
-        # },
-        # {
-        #     "url": [
-        #         f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/aoi.geojson",
-        #         f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/baseline/non_buildings_areas.tif",
-        #         f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/cool-roofs/utci_1500_cool_roofs_achievable.tif",
-        #     ],
-        #     "layer_id": "utci_1500_cool_roofs_non_buildings",
-        #     "year": "2025",
-        #     "s3_folder": "data/prd/utci",
-        # },
-        # {
-        #     "url": [
-        #         f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/aoi.geojson",
-        #         f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/baseline/non_buildings_areas.tif",
-        #         f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/cool-roofs/utci_1800_cool_roofs_achievable.tif",
-        #     ],
-        #     "layer_id": "utci_1800_cool_roofs_non_buildings",
-        #     "year": "2025",
-        #     "s3_folder": "data/prd/utci",
-        # },
+        {
+            "url": [
+                f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/aoi.geojson",
+                f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/baseline/non_buildings_areas.tif",
+                f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/cool-roofs/utci_1200_cool_roofs_achievable.tif",
+            ],
+            "layer_id": "utci_1200_cool_roofs_non_buildings",
+            "year": "2025",
+            "s3_folder": "data/prd/utci",
+        },
+        {
+            "url": [
+                f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/aoi.geojson",
+                f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/baseline/non_buildings_areas.tif",
+                f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/cool-roofs/utci_1500_cool_roofs_achievable.tif",
+            ],
+            "layer_id": "utci_1500_cool_roofs_non_buildings",
+            "year": "2025",
+            "s3_folder": "data/prd/utci",
+        },
+        {
+            "url": [
+                f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/aoi.geojson",
+                f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/baseline/non_buildings_areas.tif",
+                f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/cool-roofs/utci_1800_cool_roofs_achievable.tif",
+            ],
+            "layer_id": "utci_1800_cool_roofs_non_buildings",
+            "year": "2025",
+            "s3_folder": "data/prd/utci",
+        },
         {
             "url": [
                 f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/aoi.geojson",
@@ -1259,6 +1269,7 @@ if __name__ == "__main__":
                 layer["year"],
                 "wri-cities-data-api",
                 layer["s3_folder"],
+                data_dir=data_dir,
                 dry_run=dry_run,
             )
             if error:
