@@ -150,7 +150,7 @@ def process_raster_layer(
             "non_buildings_areas",
         ]:
             # Recode pixel values “0” to -999 to show them transparent in the app. CHECKED
-            error = _replace_pixel_values_with_condition(
+            error = replace_pixel_values_with_condition(
                 local_tif_path_with_filename, 0, -999, "=="
             )
             if error:
@@ -386,7 +386,7 @@ def process_raster_layer(
             if error:
                 raise Exception(error)
             error = replace_pixel_values_with_condition(
-                local_tif_path_with_filename, 0, -999, ">"
+                local_tif_path_with_filename, -1, -999, ">"
             )
             if error:
                 raise Exception(error)

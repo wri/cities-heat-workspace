@@ -90,7 +90,7 @@ def retrieve_s3_contents(
         return contents, None
 
 
-def file_exists_in_s3(s3_bucket_name: str, key: str) -> List[Union[str, None], bool]:
+def file_exists_in_s3(s3_bucket_name: str, key: str) -> Tuple[Union[str, None], bool]:
     """Returns True if the specified key exists in s3 else False. First return parameter is any errors if any."""
     try:
         s3_client = boto3.client("s3")

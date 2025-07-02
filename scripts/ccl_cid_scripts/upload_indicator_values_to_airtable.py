@@ -198,6 +198,13 @@ if __name__ == "__main__":
         dest="dry_run",
     )
     parser.add_argument(
+        "-s",
+        "--scenario",
+        choices=["baseline", "cool-roofs", "street-trees", "park-shade-structures"],
+        dest="scenario_id",
+        help="Specify the scenario for which the layers need to be generated. If not specified, layers for all scenarios will be generated.",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         help="Specify this argument to print verbose messages.",
@@ -208,7 +215,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     city_id = args.city_id
     aoi_id = args.aoi_id
-    source_url = f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/cool-roofs/scenario-metrics.csv"
+    scenario_id = args.scenario_id
+    source_url = f"https://wri-cities-heat.s3.us-east-1.amazonaws.com/{city_id}/scenarios/aoi/{aoi_id}/{scenario_id}/scenario-metrics.csv"
     dry_run = args.dry_run
     verbose = args.verbose
     err = upload_indicators(source_url, dry_run, verbose)
