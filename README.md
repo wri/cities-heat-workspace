@@ -83,25 +83,30 @@ results/
 ├── buildings/{city}/
 │   ├── metrics/
 │   │   ├── building_height_metrics.csv
-│   │   └── building_footprint_accuracy.csv
+│   │   ├── building_footprint_accuracy.csv
+│   │   └── ...
 │   └── graphs/
 │       ├── height_scatterplot.png
-│       └── height_histogram.png
+│       ├── height_histogram.png
+│       └── ...
 ├── shade/{city}/
 │   ├── metrics/
 │   │   ├── shade_accuracy_weighted.csv
 │   │   ├── shade_confusion_matrix_all.csv
-│   │   └── shade_kappa_all.csv
+│   │   ├── shade_kappa_all.csv
+│   │   └── ...
 │   └── graphs/
 │       ├── shade_area_distribution_*.png
-│       └── shade_weighted_accuracy_*.png
+│       ├── shade_weighted_accuracy_*.png
+│       └── ...
 └── utci/{city}/
     ├── metrics/
     │   └── utci_stats.csv
     └── graphs/
         ├── utci_scatter_All_1200.png
         ├── utci_line_mean_All.png
-        └── utci_error_line_All.png
+        ├── utci_error_line_All.png       
+        └── ...
 ```
 
 ## Customization
