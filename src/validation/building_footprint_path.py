@@ -183,7 +183,17 @@ def validate_building_footprint(city, global_dsm_path, global_dem_path, local_ds
             # "False_Negatives": [int(fn)],
             # "True_Negatives": [int(tn)]
         })
+    
+        # save confusion matrix to CSV
+        conf_matrix_df = pd.DataFrame({
+            "City": [city],
+            "True_Negatives": [int(tn)],
+            "False_Positives": [int(fp)],
+            "False_Negatives": [int(fn)],
+            "True_Positives": [int(tp)]
+        })
         
+        conf_matrix_df.to_csv(output_dir / f"building_footprint_confusion_matrix_{city}.csv", index=False)
         point_results_df.to_csv(output_dir / f"building_footprint_accuracy_{city}.csv", index=False)
         
         print(f"\n✅ Building footprint validation completed for {city}")
@@ -199,7 +209,7 @@ def main():
         all_configs = yaml.safe_load(f)     
 
     # change the city name based on the city name in city_config.yaml   
-    CITY_NAME = "RiodeJaneiro"
+    CITY_NAME = "Monterrey1"
 
     if CITY_NAME not in all_configs:
         raise ValueError(f"{CITY_NAME} not found in config.")

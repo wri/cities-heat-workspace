@@ -1,0 +1,2 @@
+City,Sample_Points,True_Buildings,Predicted_Buildings,Overall_Accuracy,User_Accuracy,Producer_Accuracy,Kappa
+RiodeJaneiro,500,236,197,0.902,0.9746192893401016,0.8135593220338984,0.8016451309951746
