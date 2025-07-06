@@ -14,7 +14,7 @@ cities-heat-workspace/
 │   │   ├── shade_val_weighted_path.py 
 │   │   └── utci_val_path.py         
 │   ├── visualization/               
-│   │   ├── buildings_viz.py         
+│   │   ├── buildings_height_viz.py         
 │   │   ├── shade_viz.py             
 │   │   └── utci_viz_path.py         
 │   └── tests/                       # Test scripts (not used)
@@ -47,7 +47,7 @@ CityName:
 
 ### 2. Run Validation Pipeline and Generate Visualisation
 
-Update city name in the scripts' `main()`.  
+Update city name in the scripts' `main()` function.  
 Then run validation for each component.  
 
 Afterwards, run visualisation for each component. The visualisation scripts use the `.csv` file created from the validation scripts.
@@ -56,52 +56,65 @@ Afterwards, run visualisation for each component. The visualisation scripts use 
 ## Analysis Components
 
 ### Building Height Validation
-- **Metrics**: MAE, RMSE, R²
-- **Outputs**: Scatter plots, histograms, error metrics CSV
+- **Script**: `src/validation/building_height_path.py`
+- **Metrics**: MAE, RMSE, R², Standard Deviation (with Z-score filtering ±3)
+- **Outputs**: 
+  - `results/buildings/{city}/height/metrics/`: CSV files with filtered and unfiltered metrics
+  - `results/buildings/{city}/height/graphs/`: Histogram, scatter plot
 
 ### Building Footprint Validation
+- **Script**: `src/validation/building_footprint_path.py`
 - **Metrics**: 
+  - Area comparison: Absolute error between total building areas
+  - Point sampling: Overall/User's/Producer's accuracy, Kappa coefficient, confusion matrix
 - **Outputs**: 
+  - `building_footprint_area_{city}.csv`: Area comparison results
+  - `building_footprint_accuracy_{city}.csv`: Point sampling validation results
 
 ### Shade Validation
-- **Metrics**: User's/Producer's accuracy, Kappa coefficient, confusion matrices
+- **Script**: `src/validation/shade_val_weighted_path.py`
+- **Metrics**: User's/Producer's accuracy, Kappa coefficient, confusion matrices (weighted by area)
 - **Outputs**: 
   - `results/shade/{city}/metrics/`: CSV files with accuracy statistics
-  - `results/shade/{city}/graphs/`: Line plots and distribution charts
+  - `results/shade/{city}/graphs/`: Shade area distribution charts, Weighted accuracy plots
 
 ### UTCI Validation
+- **Script**: `src/validation/utci_val_path.py`
 - **Metrics**: MAE, RMSE, R², bias analysis across different shade conditions
 - **Outputs**:
-  - `results/utci/{city}/metrics/`: Statistical summaries
-  - `results/utci/{city}/graphs/`: Scatter plots, line plots, error analysis
-
+  - `results/utci/{city}/metrics/`: Statistical summaries by shade type
+  - `results/utci/{city}/graphs/`: Scatter plots, line plots, error analysis by shade type
 
 ## Output Structure
 
 ```
 results/
 ├── buildings/{city}/
-│   ├── metrics/
-│   │   ├── building_height_metrics.csv
-│   │   ├── building_footprint_accuracy.csv
-│   │   └── ...
-│   └── graphs/
-│       ├── height_scatterplot.png
-│       ├── height_histogram.png
-│       └── ...
+│   ├── footprint/
+│   │   └── metrics/
+│   │       ├── building_footprint_area_{city}.csv       
+│   │       ├── building_footprint_accuracy_{city}.csv     
+│   │       └── building_footprint_confusion_matrix_{city}.csv 
+│   └── height/
+│       ├── metrics/
+│       │   ├── building_height_metrics_filtered_by_zscore.csv
+│       │   └── building_height_metrics_unfiltered.csv
+│       └── graphs/
+│           ├── height_error_histogram_zscore_filtered.png
+│           └── height_scatterplot_zscore_filtered.png
 ├── shade/{city}/
 │   ├── metrics/
-│   │   ├── shade_accuracy_weighted.csv
-│   │   ├── shade_confusion_matrix_all.csv
-│   │   ├── shade_kappa_all.csv
-│   │   └── ...
+│   │   ├── shade_accuracy_weighted_{city}.csv
+│   │   ├── shade_confusion_matrix_all_{city}.csv
+│   │   └── shade_kappa_all_{city}.csv
 │   └── graphs/
-│       ├── shade_area_distribution_*.png
-│       ├── shade_weighted_accuracy_*.png
+│       ├── shade_area_distribution_percentage_{time}.png 
+│       ├── shade_weighted_accuracy_{time}.png
+│       ├── shade_difference_by_type_raw.png
 │       └── ...
 └── utci/{city}/
     ├── metrics/
-    │   └── utci_stats.csv
+    │   └── utci_stats_{city}.csv
     └── graphs/
         ├── utci_scatter_All_1200.png
         ├── utci_line_mean_All.png
