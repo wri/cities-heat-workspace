@@ -47,7 +47,7 @@ def validate_building_footprint_from_config(config):
     global_dem_path = config['global_dem_path']
     local_dsm_path = config['local_dsm_path']
     local_dem_path = config['local_dem_path']
-    output_dir = Path(f"results/buildings/{city}")
+    output_dir = Path(f"results/buildings/{city}/footprint/metrics")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with open_local_raster(global_dsm_path) as g_dsm, \
@@ -102,6 +102,8 @@ def validate_building_footprint_from_config(config):
 if __name__ == "__main__":
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
+    
+    # change the city name based on the city name in city_config.yaml
     city_name = "RiodeJaneiro"
     config = {"city": city_name, **all_configs[city_name]}
     validate_building_footprint_from_config(config)

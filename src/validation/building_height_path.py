@@ -6,10 +6,12 @@ from rasterio.warp import transform_bounds
 from rasterio.io import MemoryFile
 from pathlib import Path
 import requests
-import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, r2_score
 import yaml
+import sys
+sys.path.append('src')
+from visualization.building_height_viz import plot_building_height_validation
 
 
 def open_local_raster(file_path):
@@ -47,10 +49,8 @@ def shrink_window(window, n_pixels):
     )
 
 
-def validate_building_height(city, local_dsm, global_dsm, local_dem, global_dem, output_dir="results/buildings"):
-    output_dir = Path(output_dir) / city
-    output_dir.mkdir(parents=True, exist_ok=True)
-
+def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, global_dem, output_dir):
+    
     with open_local_raster(local_dsm) as src_ldsm, open_local_raster(global_dsm) as src_gdsm, \
          open_local_raster(local_dem) as src_ldem, open_local_raster(global_dem) as src_gdem:
 
@@ -75,6 +75,7 @@ def validate_building_height(city, local_dsm, global_dsm, local_dem, global_dem,
         dem_global = src_gdem.read(1, window=win_gdem)
         print(f"DEM Local Shape: {dem_local.shape}, DEM Global Shape: {dem_global.shape}")
 
+    # capture only the building pixels (building only dsm - dem)
     height_local = dsm_local - dem_local
     height_global = dsm_global - dem_global
 
@@ -82,71 +83,94 @@ def validate_building_height(city, local_dsm, global_dsm, local_dem, global_dem,
     local_vals = height_local[mask].flatten()
     global_vals = height_global[mask].flatten()
 
+    # errors between global and local 
     height_errors = global_vals - local_vals
 
-    # Filter out outliers with large absolute errors
-    error_threshold = 30  # meters
-    abs_error = np.abs(height_errors)
-    valid_mask = abs_error < error_threshold
+    # filter outliers using z-score
+    z_score = (height_errors - np.mean(height_errors)) / np.std(height_errors)
+    # print("z-score: ", z_score)
+    
+    valid_mask_zscore = (z_score > -3) & (z_score < 3)
 
-    local_filtered = local_vals[valid_mask]
-    global_filtered = global_vals[valid_mask]
-    height_errors_filtered = global_filtered - local_filtered
+    # # filter outliers using signed error range
+    # error_threshold = 15  # meters
+    # valid_mask = (height_errors > -error_threshold) & (height_errors < error_threshold)
 
-    mae = mean_absolute_error(local_filtered, global_filtered)
-    r2 = r2_score(local_filtered, global_filtered)
-    std = np.std(height_errors_filtered)
+    # calculate bias metrics
+    positive_mask = height_errors > 0
+    negative_mask = height_errors < 0
+    positive_errors = height_errors[positive_mask]
+    negative_errors = height_errors[negative_mask]
 
-    metrics = {
+    # Z-score filtered data
+    local_filtered = local_vals[valid_mask_zscore]
+    global_filtered = global_vals[valid_mask_zscore]
+    height_errors_filtered = height_errors[valid_mask_zscore]
+
+    # Z-score filtered metrics
+    mae_filtered = mean_absolute_error(local_filtered, global_filtered)
+    r2_filtered = r2_score(local_filtered, global_filtered)
+    mean_bias_filtered = np.mean(height_errors_filtered)
+    std_filtered = np.std(height_errors_filtered)
+    rmse_filtered = np.sqrt(np.mean(height_errors_filtered**2))
+
+    # Unfiltered metrics (using all valid finite data)
+    mae_unfiltered = mean_absolute_error(local_vals, global_vals)
+    r2_unfiltered = r2_score(local_vals, global_vals)
+    mean_bias_unfiltered = np.mean(height_errors)
+    std_unfiltered = np.std(height_errors)
+    rmse_unfiltered = np.sqrt(np.mean(height_errors**2))
+
+    metrics_zscore = {
         "City": city,
-        "MAE": mae,
-        "R²": r2,
-        "STD": std,
-        "% Local Valid Pixels": len(local_filtered)/len(height_local.flatten())*100,
-        "% Global Valid Pixels": len(global_filtered)/len(height_global.flatten())*100
+        "MAE": mae_filtered,
+        "R²": r2_filtered,
+        "Mean_Bias": mean_bias_filtered,
+        "RMSE": rmse_filtered,
+        "STD": std_filtered,
+        "% Overestimation": len(positive_errors) / len(height_errors) * 100,
+        "% Underestimation": len(negative_errors) / len(height_errors) * 100,
+        "Mean_Overestimation": np.mean(positive_errors) if len(positive_errors) > 0 else 0,
+        "Mean_Underestimation": np.mean(negative_errors) if len(negative_errors) > 0 else 0,
+        "% Valid Pixels": len(local_filtered)/len(height_local.flatten())*100,
+        "Filter_Type": "Z-score (±3)"
     }
 
-    pd.DataFrame([metrics]).to_csv(output_dir / "building_height_metrics_filtered.csv", index=False)
+    metrics_unfiltered = {
+        "City": city,
+        "MAE": mae_unfiltered,
+        "R²": r2_unfiltered,
+        "Mean_Bias": mean_bias_unfiltered,
+        "RMSE": rmse_unfiltered,
+        "STD": std_unfiltered,
+        "% Overestimation": len(positive_errors) / len(height_errors) * 100,
+        "% Underestimation": len(negative_errors) / len(height_errors) * 100,
+        "Mean_Overestimation": np.mean(positive_errors) if len(positive_errors) > 0 else 0,
+        "Mean_Underestimation": np.mean(negative_errors) if len(negative_errors) > 0 else 0,
+        "% Valid Pixels": 100.0,  # All finite pixels are used
+        "Filter_Type": "None (all finite data)"
+    }
 
-    # histogram distribution of bldg height errors
-    plt.figure()
-    n, bins, patches = plt.hist(height_errors_filtered, bins=50, color='gray', edgecolor='black')
-    plt.title(f"Building Height Error Histogram (Filtered < {error_threshold}m): {city}")
-    plt.xlabel("Height Error (Global - Local) [m]")
-    plt.ylabel("Frequency (millions)")
-    plt.grid(True, alpha=0.3)
-
-    # # Add frequency labels to each bar
-    # for i in range(len(patches)):
-    #     plt.text(patches[i].get_x() + patches[i].get_width() / 2, n[i],
-    #              f'{int(n[i])}', ha='center', va='bottom')
+    # save metrics to csv
+    pd.DataFrame([metrics_zscore]).to_csv(output_dir / "building_height_metrics_filtered_by_zscore.csv", index=False)
+    pd.DataFrame([metrics_unfiltered]).to_csv(output_dir / "building_height_metrics_unfiltered.csv", index=False)
     
-    plt.savefig(output_dir / "height_error_histogram_filtered.png", dpi=300)
-    plt.close()
-
-    # scatterplot of global vs local bldg height
-    plt.figure()
-    plt.scatter(local_filtered, global_filtered, s=1, alpha=0.3)
-    m, b = np.polyfit(local_filtered, global_filtered, 1)
-    plt.plot(local_filtered, m * local_filtered + b, color="red", label=f"y = {m:.2f}x + {b:.2f}")
-    plt.title(f"Global vs Local Building Height (Filtered < {error_threshold}m): {city}")
-    plt.text(0.05, 0.95, f"$R^2$ = {r2:.3f}", transform=plt.gca().transAxes,
-         fontsize=10, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.7))
-    plt.xlabel("Local (LiDAR) Height [m]")
-    plt.ylabel("Global Height [m]")
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(output_dir / "height_scatterplot_filtered.png", dpi=300)
-    plt.close()
-
-    print(f"✅ Building height validation complete for {city}. Filtered metrics saved to {output_dir.resolve()}")
+    print(f"✅ Building height metrics calculated for {city}. Results saved to {output_dir.resolve()}")
+    
+    return {
+        'local_filtered': local_filtered,
+        'global_filtered': global_filtered,
+        'height_errors_filtered': height_errors_filtered,
+        'metrics': metrics_zscore
+    }
 
 
-if __name__ == "__main__":
+def main():
     with open("config/city_config.yaml", "r") as f:
-        all_configs = yaml.safe_load(f)
+        all_configs = yaml.safe_load(f)     
 
-    CITY_NAME = "RiodeJaneiro"
+    # change the city name based on the city name in city_config.yaml   
+    CITY_NAME = "Monterrey1"
 
     if CITY_NAME not in all_configs:
         raise ValueError(f"{CITY_NAME} not found in config.")
@@ -156,7 +180,25 @@ if __name__ == "__main__":
     local_dem_path = all_configs[CITY_NAME]['local_dem_path']
     global_dem_path = all_configs[CITY_NAME]['global_dem_path']
 
-    output_dir = Path(f"results/buildings/{CITY_NAME}")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # metrics calculation
+    metrics_output_dir = Path(f"results/buildings/{CITY_NAME}/height/metrics")
+    metrics_output_dir.mkdir(parents=True, exist_ok=True)
 
-    validate_building_height(CITY_NAME, local_dsm_path, global_dsm_path, local_dem_path, global_dem_path, output_dir)
+    result = calculate_building_height_metrics(CITY_NAME, local_dsm_path, global_dsm_path, local_dem_path, global_dem_path, metrics_output_dir)
+    
+    # plots generation
+    plots_output_dir = Path(f"results/buildings/{CITY_NAME}/height/graphs")
+    plots_output_dir.mkdir(parents=True, exist_ok=True)
+    
+    plot_building_height_validation(
+        CITY_NAME, 
+        result['local_filtered'], 
+        result['global_filtered'], 
+        result['height_errors_filtered'], 
+        result['metrics'], 
+        plots_output_dir
+    )
+
+
+if __name__ == "__main__":
+    main()

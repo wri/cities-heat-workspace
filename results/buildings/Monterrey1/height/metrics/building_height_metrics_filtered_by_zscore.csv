@@ -1,0 +1,2 @@
+City,MAE,R²,Mean_Bias,RMSE,STD,% Overestimation,% Underestimation,Mean_Overestimation,Mean_Underestimation,% Valid Pixels,Filter_Type
+Monterrey1,2.768203020095825,-0.1167144775390625,0.66427183,4.198274,4.145389,57.68025960235512,39.4459148552878,3.0406084,-3.1610138,99.01126317096299,Z-score (±3)
