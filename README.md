@@ -1,3 +1,5 @@
+# cities-heat-workspace
+# Data Validation
 
 ## Structure
 
@@ -24,7 +26,7 @@ cities-heat-workspace/
 └── requirements.txt                 # Python dependencies
 ```
 
-### 2. Configure Cities
+### 1. Configure Cities
 Edit `config/city_config.yaml` to add city's data paths:  
 *The ones using local paths end with `_path` in the name.* 
 
@@ -43,7 +45,7 @@ CityName:
   utci_global_paths: ["/path/to/global/utci_1200.tif", ...]
 ```
 
-### 3. Run Validation Pipeline and Generate Visualisation
+### 2. Run Validation Pipeline and Generate Visualisation
 
 Update city name in the scripts' `main()`.  
 Then run validation for each component.  
