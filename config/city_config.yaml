@@ -35,7 +35,7 @@ Monterrey1:
     pedestrian_mask: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/pedestrian_areas.tif
     pedestrian_mask_path: /Users/hyejijoh/Desktop/mty/pedestrian_areas.tif
     land_use_mask: null
-    land_use_mask_path: null
+    land_use_mask_path: /Users/hyejijoh/Desktop/mty/cif_lulc_mty.tif
   shade_local_paths_20m:
   - data/resampled/Monterrey1/shade/local/Shadow_2023_172_1200D_20m.tif
   - data/resampled/Monterrey1/shade/local/Shadow_2023_172_1500D_20m.tif
@@ -113,9 +113,9 @@ RiodeJaneiro:
   - /Users/hyejijoh/Desktop/rdj/local/UTCI_2022_365_1800.tif
   mask_paths:
     pedestrian_mask: null
-    pedestrian_mask_path: null
+    pedestrian_mask_path: /Users/hyejijoh/Desktop/rdj/pedestrian-area.tif
     land_use_mask: null
-    land_use_mask_path: null
+    land_use_mask_path: /Users/hyejijoh/Desktop/rdj/cif_lulc_rio.tif
   shade_local_paths_20m:
   - data/resampled/RiodeJaneiro/shade/local/Shadow_2022_365_1200D_20m.tif
   - data/resampled/RiodeJaneiro/shade/local/Shadow_2022_365_1500D_20m.tif
