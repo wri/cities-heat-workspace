@@ -9,7 +9,8 @@ import rasterio
 from rasterio.warp import reproject, Resampling
 import numpy
 import numpy.ma as ma
-from network_utils import download_file_from_url, upload_file_to_s3_bucket
+from network_utils import download_file_from_url
+from s3_utils import upload_file_to_s3_bucket
 from vector_utils import reproject_geojson
 
 

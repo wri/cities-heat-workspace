@@ -12,11 +12,14 @@ from raster_utils import (
 )
 from vector_utils import reproject_geojson
 from rasterio.enums import Resampling
-from network_utils import download_file_from_url, upload_file_to_s3_bucket
-from typing import List, Tuple, Union
+from network_utils import download_file_from_url
+from s3_utils import upload_file_to_s3_bucket
+from typing import List, Union
 import shutil
 import sys
 import os
+from dotenv import load_dotenv
+import argparse
 
 
 def process_raster_layer(
@@ -432,20 +435,20 @@ def process_raster_layer(
 
 
 if __name__ == "__main__":
-    import argparse
+
+    load_dotenv()
+    data_dir = os.environ.get("DATA_DIR")
+    destination_path_prefix = os.environ.get("DESTINATION_S3_PATH_PREFIX")
+
+    if data_dir is None or destination_path_prefix is None:
+        print("Please specify DATA_DIR AND DESTINATION_S3_PATH_PREFIX in the .env file")
+        sys.exit(1)
 
     parser = argparse.ArgumentParser(
         prog="generate_raster_layers",
         description="Generates raster layers for the CCL and CID applications given a city ID, AOI ID and scenario",
     )
-    parser.add_argument(
-        "-dd",
-        "--data_dir",
-        help="Specify a local data directory in which to store downloaded and generated files.",
-        action="store",
-        dest="data_dir",
-        required=True,
-    )
+
     parser.add_argument(
         "-c",
         "--city_id",
@@ -454,6 +457,7 @@ if __name__ == "__main__":
         dest="city_id",
         required=True,
     )
+
     parser.add_argument(
         "-a",
         "--aoi_id",
@@ -499,7 +503,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_baseline",
             "year": "2023",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -509,7 +513,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_baseline_pedestrian_areas",
             "year": "2023",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -519,7 +523,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_baseline_parks_areas",
             "year": "2023",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -528,7 +532,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_baseline",
             "year": "2023",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -538,7 +542,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_baseline_pedestrian_areas",
             "year": "2023",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -548,7 +552,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_baseline_parks_areas",
             "year": "2023",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -557,7 +561,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "tree_cover_baseline",
             "year": "2024",
-            "s3_folder": "data/prd/tree_cover",
+            "s3_folder": os.path.join(destination_path_prefix, "tree_cover"),
         },
         {
             "url": [
@@ -567,7 +571,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "tree_cover_baseline_pedestrian_areas",
             "year": "2024",
-            "s3_folder": "data/prd/tree_cover",
+            "s3_folder": os.path.join(destination_path_prefix, "tree_cover"),
         },
         {
             "url": [
@@ -576,7 +580,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "pedestrian_areas",
             "year": "2024",
-            "s3_folder": "data/prd/pedestrian_areas",
+            "s3_folder": os.path.join(destination_path_prefix, "pedestrian_areas"),
         },
         {
             "url": [
@@ -585,7 +589,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "buildings_areas",
             "year": "2025",
-            "s3_folder": "data/prd/buildings",
+            "s3_folder": os.path.join(destination_path_prefix, "buildings"),
         },
         {
             "url": [
@@ -594,7 +598,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "non_buildings_areas",
             "year": "2025",
-            "s3_folder": "data/prd/buildings",
+            "s3_folder": os.path.join(destination_path_prefix, "buildings"),
         },
         {
             "url": [
@@ -603,7 +607,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "albedo_baseline",
             "year": "2025",
-            "s3_folder": "data/prd/albedo",
+            "s3_folder": os.path.join(destination_path_prefix, "albedo"),
         },
     ]
     scenarios_street_trees_layers = [
@@ -614,7 +618,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "plantable_areas",
             "year": "2024",
-            "s3_folder": "data/prd/plantable_areas",
+            "s3_folder": os.path.join(destination_path_prefix, "plantable_areas"),
         },
         {
             "url": [
@@ -623,7 +627,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_street_trees_achievable",
             "year": "2023",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -632,7 +636,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_street_trees_achievable",
             "year": "2023",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -641,7 +645,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "tree_cover_achievable",
             "year": "2024",
-            "s3_folder": "data/prd/tree_cover",
+            "s3_folder": os.path.join(destination_path_prefix, "tree_cover"),
         },
         {
             "url": [
@@ -650,7 +654,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_street_trees_achievable_vs_baseline",
             "year": "2023",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -659,7 +663,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_street_trees_achievable_vs_baseline",
             "year": "2023",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -669,7 +673,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_street_trees_achievable_pedestrian_areas",
             "year": "2023",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -679,7 +683,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_street_trees_achievable_pedestrian_areas",
             "year": "2023",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -688,7 +692,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "tree_cover_achievable_pedestrian_areas",
             "year": "2024",
-            "s3_folder": "data/prd/tree_cover",
+            "s3_folder": os.path.join(destination_path_prefix, "tree_cover"),
         },
     ]
     scenarios_park_shade_structures_layers = [
@@ -699,7 +703,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_park_shade_achievable",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -708,7 +712,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_park_shade_achievable",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -717,7 +721,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_park_shade_achievable",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -727,7 +731,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_park_shade_achievable_shade_structure_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -737,7 +741,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_park_shade_achievable_shade_structure_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -747,7 +751,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_park_shade_achievable_shade_structure_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -757,7 +761,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_park_shade_achievable_parks_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -767,7 +771,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_park_shade_achievable_parks_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -777,7 +781,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_park_shade_achievable_parks_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -786,7 +790,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_park_shade_achievable_vs_baseline",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -795,7 +799,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_park_shade_achievable_vs_baseline",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -804,7 +808,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_park_shade_achievable_vs_baseline",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -814,7 +818,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_park_shade_achievable_vs_baseline_shade_structure_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -824,7 +828,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_park_shade_achievable_vs_baseline_shade_structure_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -834,7 +838,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_park_shade_achievable_vs_baseline_shade_structure_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -844,7 +848,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_park_shade_achievable_vs_baseline_parks_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -854,7 +858,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_park_shade_achievable_vs_baseline_parks_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -864,7 +868,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_park_shade_achievable_vs_baseline_parks_areas",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -873,7 +877,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1200_park_shade_achievable",
             "year": "2025",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -882,7 +886,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_park_shade_achievable",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -891,7 +895,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1800_park_shade_achievable",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -901,7 +905,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1200_park_shade_achievable_shade_structure_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -911,7 +915,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_park_shade_achievable_shade_structure_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -921,7 +925,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1800_park_shade_achievable_shade_structure_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -931,7 +935,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1200_park_shade_achievable_parks_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -941,7 +945,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_park_shade_achievable_parks_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -951,7 +955,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1800_park_shade_achievable_parks_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -960,7 +964,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1200_park_shade_achievable_vs_baseline",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -969,7 +973,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_park_shade_achievable_vs_baseline",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -978,7 +982,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1800_park_shade_achievable_vs_baseline",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -988,7 +992,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1200_park_shade_achievable_vs_baseline_shade_structure_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -998,7 +1002,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_park_shade_achievable_vs_baseline_shade_structure_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -1008,7 +1012,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1800_park_shade_achievable_vs_baseline_shade_structure_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -1018,7 +1022,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1200_park_shade_achievable_vs_baseline_parks_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -1028,7 +1032,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1500_park_shade_achievable_vs_baseline_parks_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
         {
             "url": [
@@ -1038,7 +1042,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "shade_1800_park_shade_achievable_vs_baseline_parks_areas",
             "year": "2022",
-            "s3_folder": "data/prd/shade",
+            "s3_folder": os.path.join(destination_path_prefix, "shade"),
         },
     ]
     scenarios_cool_roofs_layers = [
@@ -1049,7 +1053,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "albedo_achievable_vs_baseline",
             "year": "2025",
-            "s3_folder": "data/prd/albedo",
+            "s3_folder": os.path.join(destination_path_prefix, "albedo"),
         },
         {
             "url": [
@@ -1059,7 +1063,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "albedo_achievable_vs_baseline_buildings_areas",
             "year": "2025",
-            "s3_folder": "data/prd/albedo",
+            "s3_folder": os.path.join(destination_path_prefix, "albedo"),
         },
         {
             "url": [
@@ -1068,7 +1072,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "albedo_cool_roofs_achievable",
             "year": "2025",
-            "s3_folder": "data/prd/albedo",
+            "s3_folder": os.path.join(destination_path_prefix, "albedo"),
         },
         {
             "url": [
@@ -1078,7 +1082,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "albedo_cool_roofs_achievable_buildings_areas",
             "year": "2025",
-            "s3_folder": "data/prd/albedo",
+            "s3_folder": os.path.join(destination_path_prefix, "albedo"),
         },
         {
             "url": [
@@ -1087,7 +1091,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_cool_roofs_achievable_vs_baseline",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1096,7 +1100,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_cool_roofs_achievable_vs_baseline",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1105,7 +1109,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_cool_roofs_achievable_vs_baseline",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1115,7 +1119,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_cool_roofs_non_buildings",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1125,7 +1129,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_cool_roofs_non_buildings",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1135,7 +1139,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_cool_roofs_non_buildings",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1145,7 +1149,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_cool_roofs_achievable_vs_baseline_non_buildings",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1155,7 +1159,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_cool_roofs_achievable_vs_baseline_non_buildings",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1165,7 +1169,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_cool_roofs_achievable_vs_baseline_non_buildings",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1174,7 +1178,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_cool_roofs_achievable",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1183,7 +1187,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_cool_roofs_achievable",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1192,7 +1196,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_cool_roofs_achievable",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1202,7 +1206,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1200_cool_roofs_non_buildings",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1212,7 +1216,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1500_cool_roofs_non_buildings",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
         {
             "url": [
@@ -1222,7 +1226,7 @@ if __name__ == "__main__":
             ],
             "layer_id": "utci_1800_cool_roofs_non_buildings",
             "year": "2025",
-            "s3_folder": "data/prd/utci",
+            "s3_folder": os.path.join(destination_path_prefix, "utci"),
         },
     ]
     scenario_layer_list_mapping = {
