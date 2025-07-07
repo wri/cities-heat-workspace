@@ -8,27 +8,52 @@ Monterrey1:
   local_dem_path: /Users/hyejijoh/Desktop/mty/dem_filled_clipped.tif
   global_dem_path: /Users/hyejijoh/Desktop/mty/cif_dem.tif
   shade_global:
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/Shadow_2023_172_1200D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/Shadow_2023_172_1500D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/Shadow_2023_172_1800D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/Shadow_2023_172_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/Shadow_2023_172_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/Shadow_2023_172_1800D.tif
   shade_local:
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/output_local_v4/Shadow_2023_172_1200D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/output_local_v4/Shadow_2023_172_1500D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/output_local_v4/Shadow_2023_172_1800D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/output_local_v4/Shadow_2023_172_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/output_local_v4/Shadow_2023_172_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/output_local_v4/Shadow_2023_172_1800D.tif
   shade_local_paths:
-    - /Users/hyejijoh/Desktop/mty/local/Shadow_2023_172_1200D.tif
-    - /Users/hyejijoh/Desktop/mty/local/Shadow_2023_172_1500D.tif
-    - /Users/hyejijoh/Desktop/mty/local/Shadow_2023_172_1800D.tif
+  - /Users/hyejijoh/Desktop/mty/local/Shadow_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty/local/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty/local/Shadow_2023_172_1800D.tif
+  shade_global_paths:
+  - /Users/hyejijoh/Desktop/mty/global/Shadow_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty/global/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty/global/Shadow_2023_172_1800D.tif
   utci_global_paths:
-    - /Users/hyejijoh/Desktop/mty/global/UTCI_2023_172_1200D.tif
-    - /Users/hyejijoh/Desktop/mty/global/UTCI_2023_172_1500D.tif
-    - /Users/hyejijoh/Desktop/mty/global/UTCI_2023_172_1800D.tif
+  - /Users/hyejijoh/Desktop/mty/global/UTCI_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty/global/UTCI_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty/global/UTCI_2023_172_1800D.tif
   utci_local_paths:
-    - /Users/hyejijoh/Desktop/mty/UTCI_2023_172_1200.tif
-    - /Users/hyejijoh/Desktop/mty/UTCI_2023_172_1500.tif
-    - /Users/hyejijoh/Desktop/mty/UTCI_2023_172_1800.tif
-
-  pedestrian_mask: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/pedestrian_areas.tif 
+  - /Users/hyejijoh/Desktop/mty/UTCI_2023_172_1200.tif
+  - /Users/hyejijoh/Desktop/mty/UTCI_2023_172_1500.tif
+  - /Users/hyejijoh/Desktop/mty/UTCI_2023_172_1800.tif
+  mask_paths:
+    pedestrian_mask: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/pedestrian_areas.tif
+    pedestrian_mask_path: /Users/hyejijoh/Desktop/mty/pedestrian_areas.tif
+    land_use_mask: null
+    land_use_mask_path: null
+  shade_local_paths_20m:
+  - data/resampled/Monterrey1/shade/local/Shadow_2023_172_1200D_20m.tif
+  - data/resampled/Monterrey1/shade/local/Shadow_2023_172_1500D_20m.tif
+  - data/resampled/Monterrey1/shade/local/Shadow_2023_172_1800D_20m.tif
+  shade_global_paths_20m:
+  - data/resampled/Monterrey1/shade/global/Shadow_2023_172_1200D_20m.tif
+  - data/resampled/Monterrey1/shade/global/Shadow_2023_172_1500D_20m.tif
+  - data/resampled/Monterrey1/shade/global/Shadow_2023_172_1800D_20m.tif
+  utci_local_paths_20m:
+  - data/resampled/Monterrey1/utci/local/UTCI_2023_172_1200_20m.tif
+  - data/resampled/Monterrey1/utci/local/UTCI_2023_172_1500_20m.tif
+  - data/resampled/Monterrey1/utci/local/UTCI_2023_172_1800_20m.tif
+  utci_global_paths_20m:
+  - data/resampled/Monterrey1/utci/global/UTCI_2023_172_1200D_20m.tif
+  - data/resampled/Monterrey1/utci/global/UTCI_2023_172_1500D_20m.tif
+  - data/resampled/Monterrey1/utci/global/UTCI_2023_172_1800D_20m.tif
+  mask_paths_20m:
+    pedestrian_mask_path: data/resampled/Monterrey1/masks/pedestrian_mask_path_20m.tif
 
 Monterrey2:
   global_dsm: null
@@ -40,6 +65,7 @@ Monterrey2:
   utci_global: []
   utci_local: []
   pedestrian_mask: null
+
 
 Monterrey3:
   global_dsm: null
@@ -58,41 +84,57 @@ RiodeJaneiro:
   global_dem_path: /Users/hyejijoh/Desktop/rdj/cif_dem.tif
   local_dem_path: /Users/hyejijoh/Desktop/rdj/dem_final_clipped.tif
   shade_global:
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/Shadow_2022_365_1200D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/Shadow_2022_365_1500D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/Shadow_2022_365_1800D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/Shadow_2022_365_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/Shadow_2022_365_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/Shadow_2022_365_1800D.tif
   shade_local:
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/local_validation/Shadow_2022_365_1200D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/local_validation/Shadow_2022_365_1500D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/local_validation/Shadow_2022_365_1800D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/local_validation/Shadow_2022_365_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/local_validation/Shadow_2022_365_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/local_validation/Shadow_2022_365_1800D.tif
   shade_global_paths:
-    - /Users/hyejijoh/Desktop/rdj/global/Shadow_2022_365_1200D.tif
-    - /Users/hyejijoh/Desktop/rdj/global/Shadow_2022_365_1500D.tif
-    - /Users/hyejijoh/Desktop/rdj/global/Shadow_2022_365_1800D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/Shadow_2022_365_1200D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/Shadow_2022_365_1500D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/Shadow_2022_365_1800D.tif
   shade_local_paths:
-    - /Users/hyejijoh/Desktop/rdj/local/Shadow_2022_365_1200D.tif
-    - /Users/hyejijoh/Desktop/rdj/local/Shadow_2022_365_1500D.tif 
-    - /Users/hyejijoh/Desktop/rdj/local/Shadow_2022_365_1800D.tif
+  - /Users/hyejijoh/Desktop/rdj/local/Shadow_2022_365_1200D.tif
+  - /Users/hyejijoh/Desktop/rdj/local/Shadow_2022_365_1500D.tif
+  - /Users/hyejijoh/Desktop/rdj/local/Shadow_2022_365_1800D.tif
   utci_global:
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/UTCI_2022_365_1200D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/UTCI_2022_365_1500D.tif
-    - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/UTCI_2022_365_1800D.tif
-# the s3 link doesn't work
-# utci_local:
-#   - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/local_validation/UTCI_2022_365_1200D.tif
-#   - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/local_validation/UTCI_2022_365_1500D.tif
-#   - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/local_validation/UTCI_2022_365_1800D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/UTCI_2022_365_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/UTCI_2022_365_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/UTCI_2022_365_1800D.tif
   utci_global_paths:
-    - /Users/hyejijoh/Desktop/rdj/global/UTCI_2022_365_1200D.tif
-    - /Users/hyejijoh/Desktop/rdj/global/UTCI_2022_365_1500D.tif
-    - /Users/hyejijoh/Desktop/rdj/global/UTCI_2022_365_1800D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/UTCI_2022_365_1200D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/UTCI_2022_365_1500D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/UTCI_2022_365_1800D.tif
   utci_local_paths:
-    - /Users/hyejijoh/Desktop/rdj/local/UTCI_2022_365_1200.tif
-    - /Users/hyejijoh/Desktop/rdj/local/UTCI_2022_365_1500.tif 
-    - /Users/hyejijoh/Desktop/rdj/local/UTCI_2022_365_1800.tif
-
-
-  pedestrian_mask: null
+  - /Users/hyejijoh/Desktop/rdj/local/UTCI_2022_365_1200.tif
+  - /Users/hyejijoh/Desktop/rdj/local/UTCI_2022_365_1500.tif
+  - /Users/hyejijoh/Desktop/rdj/local/UTCI_2022_365_1800.tif
+  mask_paths:
+    pedestrian_mask: null
+    pedestrian_mask_path: null
+    land_use_mask: null
+    land_use_mask_path: null
+  shade_local_paths_20m:
+  - data/resampled/RiodeJaneiro/shade/local/Shadow_2022_365_1200D_20m.tif
+  - data/resampled/RiodeJaneiro/shade/local/Shadow_2022_365_1500D_20m.tif
+  - data/resampled/RiodeJaneiro/shade/local/Shadow_2022_365_1800D_20m.tif
+  shade_global_paths_20m:
+  - data/resampled/RiodeJaneiro/shade/global/Shadow_2022_365_1200D_20m.tif
+  - data/resampled/RiodeJaneiro/shade/global/Shadow_2022_365_1500D_20m.tif
+  - data/resampled/RiodeJaneiro/shade/global/Shadow_2022_365_1800D_20m.tif
+  utci_local_paths_20m:
+  - data/resampled/RiodeJaneiro/utci/local/UTCI_2022_365_1200_20m.tif
+  - data/resampled/RiodeJaneiro/utci/local/UTCI_2022_365_1500_20m.tif
+  - data/resampled/RiodeJaneiro/utci/local/UTCI_2022_365_1800_20m.tif
+  utci_global_paths_20m:
+  - data/resampled/RiodeJaneiro/utci/global/UTCI_2022_365_1200D_20m.tif
+  - data/resampled/RiodeJaneiro/utci/global/UTCI_2022_365_1500D_20m.tif
+  - data/resampled/RiodeJaneiro/utci/global/UTCI_2022_365_1800D_20m.tif
+  mask_paths_20m:
+    pedestrian_mask_path: null
+    land_use_mask_path: null
 
 CapeTown:
   global_dsm: null

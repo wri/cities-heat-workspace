@@ -1,0 +1,10 @@
+Time,mask,Class,User Accuracy,Producer Accuracy,Weight,Weighted User Acc,Weighted Prod Acc
+1200D,pedestrian,Building Shade,0.169,0.248,0.0855,0.0144,0.0212
+1200D,pedestrian,Tree Shade,0.859,0.88,0.1632,0.1403,0.1435
+1200D,pedestrian,No Shade,0.92,0.866,0.7513,0.691,0.6507
+1500D,pedestrian,Building Shade,0.1,0.173,0.0172,0.0017,0.003
+1500D,pedestrian,Tree Shade,0.926,0.95,0.1781,0.1649,0.1691
+1500D,pedestrian,No Shade,0.981,0.96,0.8047,0.7892,0.7725
+1800D,pedestrian,Building Shade,0.444,0.566,0.1999,0.0889,0.1133
+1800D,pedestrian,Tree Shade,0.777,0.77,0.1748,0.1358,0.1347
+1800D,pedestrian,No Shade,0.872,0.798,0.6252,0.5455,0.4988
