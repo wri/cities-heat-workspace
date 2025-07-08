@@ -6,6 +6,8 @@ import numpy as np
 import yaml
 
 
+# TODO: incorporate into main shade_viz file
+
 # load metrics for a specific mask
 def load_metrics_for_mask(input_dir, city_name, mask_name):
     mask_suffix = f"_{mask_name}" if mask_name != "full_area" else ""

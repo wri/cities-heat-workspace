@@ -391,6 +391,8 @@ def main():
     # local file paths
     local_utci_paths = config['utci_local_paths']
     global_utci_paths = config['utci_global_paths']
+    
+    # TODO: add shade_global_paths, because this then creates a biased plot only by the shade location in the local data ‼️‼️ 
     shade_paths = config['shade_local_paths']
     
     metrics_csv = f"results/utci/{city_name}/metrics/utci_stats_{city_name}.csv"

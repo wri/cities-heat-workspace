@@ -11,6 +11,8 @@ from rasterio.windows import from_bounds, Window
 from rasterio.coords import BoundingBox
 from rasterio.warp import transform_bounds
 
+#TODO: incorporate into main utci_viz file
+
 # sample pixel numbers for scatter plots
 SAMPLE_SIZE = 30000
 RANDOM_SEED = 42
