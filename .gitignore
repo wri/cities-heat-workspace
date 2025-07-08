@@ -165,3 +165,9 @@ cython_debug/
 
 # data geotiff
 .tif/
+
+# ignore todo
+todo.md
+
+#ignore notebooks temporarily
+notebooks/
