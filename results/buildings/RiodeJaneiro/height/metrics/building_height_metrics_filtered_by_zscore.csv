@@ -1,2 +1,2 @@
-City,MAE,R²,Mean_Bias,RMSE,STD,% Overestimation,% Underestimation,Mean_Overestimation,Mean_Underestimation,% Valid Pixels,Filter_Type
-RiodeJaneiro,6.752388954162598,0.2539575695991516,1.690384,17.659634,17.578543,27.142081272901798,20.220253916348177,17.384323,-18.140873,99.86662721723081,Z-score (±3)
+City,MAE,R²,Mean_Bias,RMSE,STD,% Overestimation,% Underestimation,Mean_Overestimation,Mean_Underestimation,% Valid Pixels Local,% Valid Pixels Global,Filter_Type
+RiodeJaneiro,6.752388954162598,0.2539575695991516,1.690384,17.659634,17.578543,27.17832976762306,20.247258248108142,17.384323,-18.140873,99.86662721723081,99.86662721723081,Z-score (±3)

@@ -13,6 +13,8 @@ import sys
 sys.path.append('src')
 from visualization.building_height_viz import plot_building_height_validation
 
+# TODO: merge s3 opening and local opening into one script - for everything
+# TODO: this is the only one that calls the viz script in the validation script. maybe apply it for other scripts as well? 
 
 def open_local_raster(file_path):
     return rasterio.open(file_path)
@@ -97,15 +99,16 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
     # valid_mask = (height_errors > -error_threshold) & (height_errors < error_threshold)
 
     # calculate bias metrics
-    positive_mask = height_errors > 0
-    negative_mask = height_errors < 0
-    positive_errors = height_errors[positive_mask]
-    negative_errors = height_errors[negative_mask]
+    positive_errors = height_errors[height_errors > 0]
+    negative_errors = height_errors[height_errors < 0]
 
     # Z-score filtered data
     local_filtered = local_vals[valid_mask_zscore]
     global_filtered = global_vals[valid_mask_zscore]
     height_errors_filtered = height_errors[valid_mask_zscore]
+
+    positive_errors_filtered = height_errors_filtered[height_errors_filtered > 0]
+    negative_errors_filtered = height_errors_filtered[height_errors_filtered < 0]
 
     # Z-score filtered metrics
     mae_filtered = mean_absolute_error(local_filtered, global_filtered)
@@ -128,11 +131,12 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
         "Mean_Bias": mean_bias_filtered,
         "RMSE": rmse_filtered,
         "STD": std_filtered,
-        "% Overestimation": len(positive_errors) / len(height_errors) * 100,
-        "% Underestimation": len(negative_errors) / len(height_errors) * 100,
-        "Mean_Overestimation": np.mean(positive_errors) if len(positive_errors) > 0 else 0,
-        "Mean_Underestimation": np.mean(negative_errors) if len(negative_errors) > 0 else 0,
+        "% Overestimation": len(positive_errors_filtered) / len(local_filtered) * 100,          
+        "% Underestimation": len(negative_errors_filtered) / len(local_filtered) * 100,
+        "Mean_Overestimation": np.mean(positive_errors_filtered) if len(positive_errors_filtered) > 0 else 0,
+        "Mean_Underestimation": np.mean(negative_errors_filtered) if len(negative_errors_filtered) > 0 else 0,
         "% Valid Pixels": len(local_filtered)/len(height_local.flatten())*100,
+        #"% Valid Pixels Global": len(global_filtered)/len(height_global.flatten())*100,
         "Filter_Type": "Z-score (±3)"
     }
 
@@ -143,11 +147,12 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
         "Mean_Bias": mean_bias_unfiltered,
         "RMSE": rmse_unfiltered,
         "STD": std_unfiltered,
-        "% Overestimation": len(positive_errors) / len(height_errors) * 100,
-        "% Underestimation": len(negative_errors) / len(height_errors) * 100,
+        "% Overestimation": len(positive_errors) / len(local_vals) * 100,
+        "% Underestimation": len(negative_errors) / len(local_vals) * 100,
         "Mean_Overestimation": np.mean(positive_errors) if len(positive_errors) > 0 else 0,
         "Mean_Underestimation": np.mean(negative_errors) if len(negative_errors) > 0 else 0,
-        "% Valid Pixels": 100.0,  # All finite pixels are used
+        "% Valid Pixels": len(local_vals)/len(height_local.flatten())*100,
+        #% Valid Pixels Global": len(global_vals)/len(height_global.flatten())*100,
         "Filter_Type": "None (all finite data)"
     }
 
@@ -170,7 +175,7 @@ def main():
         all_configs = yaml.safe_load(f)     
 
     # change the city name based on the city name in city_config.yaml   
-    CITY_NAME = "RiodeJaneiro"
+    CITY_NAME = "Monterrey1"
 
     if CITY_NAME not in all_configs:
         raise ValueError(f"{CITY_NAME} not found in config.")
@@ -187,6 +192,7 @@ def main():
     result = calculate_building_height_metrics(CITY_NAME, local_dsm_path, global_dsm_path, local_dem_path, global_dem_path, metrics_output_dir)
     
     # plots generation
+    # calls plot_building_height_validation from building_height_viz.py
     plots_output_dir = Path(f"results/buildings/{CITY_NAME}/height/graphs")
     plots_output_dir.mkdir(parents=True, exist_ok=True)
     

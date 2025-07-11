@@ -9,17 +9,17 @@ import yaml
 def plot_building_height_validation(city, local_filtered, global_filtered, height_errors_filtered, metrics, output_dir):
     r2 = metrics['R²']
 
-    # histogram of height errors
-    plt.figure(figsize=(6, 6))
-    plt.hist(height_errors_filtered, bins=100, color='blue', edgecolor='gray')
-    plt.axvline(x=0, color='red', linestyle='--', alpha=0.7, label='No Error')
-    plt.title(f"{city}: Building Height Error (Z-score < ±3)")
-    plt.xlabel("Height Error (Global - Local) (m)")
-    plt.ylabel("Frequency (mil)")
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    plt.savefig(output_dir / "height_error_histogram_zscore_filtered.png", dpi=300, bbox_inches='tight')
-    plt.close()
+    # # histogram of height errors
+    # plt.figure(figsize=(6, 6))
+    # plt.hist(height_errors_filtered, bins=100, color='blue', edgecolor='gray')
+    # plt.axvline(x=0, color='red', linestyle='--', alpha=0.7, label='No Error')
+    # plt.title(f"{city}: Building Height Error (Z-score < ±3)")
+    # plt.xlabel("Height Error (Global - Local) (m)")
+    # plt.ylabel("Frequency (mil)")
+    # plt.grid(True, alpha=0.3)
+    # plt.legend()
+    # plt.savefig(output_dir / "height_error_histogram_zscore_filtered.png", dpi=300, bbox_inches='tight')
+    # plt.close()
 
     # scatter plot: Global vs Local
     plt.figure(figsize=(6, 6))
@@ -38,6 +38,27 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
     plt.grid(True, alpha=0.3)
     plt.axis('equal')
     plt.savefig(output_dir / "height_scatterplot_zscore_filtered.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+    #print(f"min_val: {min_val}, max_val: {max_val}")
+
+    # histogram of height errors
+    plt.figure(figsize=(8, 8))
+    max_range = 15  # meters
+    clipped_errors = height_errors_filtered[
+        (height_errors_filtered >= -max_range) & (height_errors_filtered <= max_range)
+    ]
+
+    plt.hist(clipped_errors, bins=100, color='skyblue', edgecolor='gray')
+    plt.axvline(x=0, color='red', linestyle='--', label='No Error')
+    plt.title(f"{city}: Building Height Error (Z-score < ±3)")
+    plt.xlabel("Height Error (Global - Local) (m)")
+    plt.ylabel("Pixel Count")
+    plt.xlim(-max_range, max_range)
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(output_dir / "height_error_histogram_z_score_filtered.png", dpi=300, bbox_inches='tight')
     plt.close()
 
 
