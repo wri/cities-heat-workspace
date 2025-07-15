@@ -5,11 +5,10 @@ import pandas as pd
 from pathlib import Path
 import yaml
 from sklearn.metrics import mean_absolute_error, r2_score
-import requests
-from rasterio.io import MemoryFile
 from rasterio.windows import from_bounds, Window
 from rasterio.coords import BoundingBox
 from rasterio.warp import transform_bounds
+import requests
 
 def classify_raster(data):
     shade_classes = {0.00: 0, 0.03: 1, 1.00: 2}
@@ -18,18 +17,6 @@ def classify_raster(data):
         mask = np.isclose(data, val, atol=0.0005)
         classified[mask] = label
     return classified
-
-def open_s3_raster(path):
-    print(f"Trying to open: {path}")
-    if os.path.exists(path):
-        print("Opening as local file.")
-        return rasterio.open(path)
-    else:
-        print("Opening as remote file.")
-        response = requests.get(path)
-        response.raise_for_status()
-        memfile = MemoryFile(response.content)
-        return memfile.open()
 
 def get_overlap_window(srcs):
     # Accepts a list of rasterio datasets, returns a window for each cropped to the overlap
@@ -76,39 +63,50 @@ def compute_stats(y_true, y_pred):
 
 def validate_utci_from_config(config):
     city = config['city']
-    local_utci_urls = config['utci_local']
-    global_utci_urls = config['utci_global']
-    shade_urls = config['shade_local']  # Use local shade classification for masking
+    local_utci_paths = config['utci_local_paths']
+    global_utci_paths = config['utci_global_paths']
+    shade_paths = config['shade_local_paths']  # Use local shade classification for masking
     output_dir = Path(f"results/utci/{city}/metrics")
     output_dir.mkdir(parents=True, exist_ok=True)
-    base_time_steps = [url.split('_')[-1].replace('.tif','') for url in local_utci_urls]
+    
+    base_time_steps = [Path(path).stem.split('_')[-1] for path in local_utci_paths]
     stats_results = []
-    for time, local_path, global_path, shade_path in zip(base_time_steps, local_utci_urls, global_utci_urls, shade_urls):
-        with open_s3_raster(local_path) as src_local, open_s3_raster(global_path) as src_global, open_s3_raster(shade_path) as src_shade:
-            print(f"[DEBUG] Local shape, bounds, transform: {src_local.shape}, {src_local.bounds}, {src_local.transform}")
-            print(f"[DEBUG] Global shape, bounds, transform: {src_global.shape}, {src_global.bounds}, {src_global.transform}")
-            print(f"[DEBUG] Shade shape, bounds, transform: {src_shade.shape}, {src_shade.bounds}, {src_shade.transform}")
-            aligned = (
-                src_local.crs == src_global.crs == src_shade.crs and
-                src_local.transform == src_global.transform == src_shade.transform and
-                src_local.shape == src_global.shape == src_shade.shape and
-                src_local.bounds == src_global.bounds == src_shade.bounds
-            )
-            if not aligned:
-                print(f"🟠 {time}: Raster mismatch. Cropping to overlap and trimming boundary.")
-                win_local, win_global, win_shade = get_overlap_window([src_local, src_global, src_shade])
-                win_local = shrink_window(win_local, 10)
-                win_global = shrink_window(win_global, 10)
-                win_shade = shrink_window(win_shade, 10)
-                local_data = src_local.read(1, window=win_local)
-                global_data = src_global.read(1, window=win_global)
-                raw_shade_data = src_shade.read(1, window=win_shade)
-            else:
-                print(f"🟢 {time}: Rasters aligned. Trimming boundary.")
-                window = shrink_window(Window(0, 0, src_local.width, src_local.height), 10)
-                local_data = src_local.read(1, window=window)
-                global_data = src_global.read(1, window=window)
-                raw_shade_data = src_shade.read(1, window=window)
+    
+    for time, local_path, global_path, shade_path in zip(base_time_steps, local_utci_paths, global_utci_paths, shade_paths):
+        print(f"Processing {time}: {local_path} vs {global_path}")
+        
+        try:
+            with rasterio.open(local_path) as src_local, rasterio.open(global_path) as src_global, rasterio.open(shade_path) as src_shade:
+                print(f"[DEBUG] Local shape, bounds, transform: {src_local.shape}, {src_local.bounds}, {src_local.transform}")
+                print(f"[DEBUG] Global shape, bounds, transform: {src_global.shape}, {src_global.bounds}, {src_global.transform}")
+                print(f"[DEBUG] Shade shape, bounds, transform: {src_shade.shape}, {src_shade.bounds}, {src_shade.transform}")
+                
+                aligned = (
+                    src_local.crs == src_global.crs == src_shade.crs and
+                    src_local.transform == src_global.transform == src_shade.transform and
+                    src_local.shape == src_global.shape == src_shade.shape and
+                    src_local.bounds == src_global.bounds == src_shade.bounds
+                )
+                
+                if not aligned:
+                    print(f"🟠 {time}: Raster mismatch. Cropping to overlap and trimming boundary.")
+                    win_local, win_global, win_shade = get_overlap_window([src_local, src_global, src_shade])
+                    win_local = shrink_window(win_local, 10)
+                    win_global = shrink_window(win_global, 10)
+                    win_shade = shrink_window(win_shade, 10)
+                    local_data = src_local.read(1, window=win_local)
+                    global_data = src_global.read(1, window=win_global)
+                    raw_shade_data = src_shade.read(1, window=win_shade)
+                else:
+                    print(f"🟢 {time}: Rasters aligned. Trimming boundary.")
+                    window = shrink_window(Window(0, 0, src_local.width, src_local.height), 10)
+                    local_data = src_local.read(1, window=window)
+                    global_data = src_global.read(1, window=window)
+                    raw_shade_data = src_shade.read(1, window=window)
+        
+        except Exception as e:
+            print(f"❌ Error reading files for {time}: {e}")
+            continue
         
         # Classify shade data from raw values to class labels
         shade_data = classify_raster(raw_shade_data)
@@ -172,9 +170,46 @@ def validate_utci_from_config(config):
     pd.DataFrame(stats_results).to_csv(output_dir / f"utci_stats_{city}.csv", index=False)
     print(f"✅ UTCI validation complete for {city}. Results saved to {output_dir.resolve()}")
 
-if __name__ == "__main__":
+# Function to check if a file exists locally
+
+def file_exists_locally(file_path):
+    return Path(file_path).exists()
+
+# Function to download a file from a URL
+
+def download_from_url(url, local_path):
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        with open(local_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        print(f"Downloaded {url} to {local_path}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading {url}: {e}")
+
+# Modify the main function to check for local files and download from URL if necessary
+
+def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
+    
     city_name = "RiodeJaneiro"
     config = {"city": city_name, **all_configs[city_name]}
-    validate_utci_from_config(config) 
+
+    # Check if local files exist, otherwise download from URL
+    local_utci_paths = config['utci_local_paths']
+    global_utci_paths = config['utci_global_paths']
+    shade_paths = config['shade_local_paths']
+    for local_path, global_path, shade_path in zip(local_utci_paths, global_utci_paths, shade_paths):
+        if not file_exists_locally(local_path):
+            download_from_url(config['url_local_utci'], local_path)
+        if not file_exists_locally(global_path):
+            download_from_url(config['url_global_utci'], global_path)
+        if not file_exists_locally(shade_path):
+            download_from_url(config['url_shade'], shade_path)
+
+    validate_utci_from_config(config)
+
+if __name__ == "__main__":
+    main() 

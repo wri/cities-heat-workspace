@@ -8,7 +8,24 @@ import pandas as pd
 from pathlib import Path
 import yaml
 import requests
-from rasterio.io import MemoryFile
+
+# Function to check if a file exists locally
+
+def file_exists_locally(file_path):
+    return Path(file_path).exists()
+
+# Function to download a file from a URL
+
+def download_from_url(url, local_path):
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        with open(local_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        print(f"Downloaded {url} to {local_path}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading {url}: {e}")
 
 def classify_raster(data):
     shade_classes = {0.00: 0, 0.03: 1, 1.00: 2}
@@ -43,34 +60,28 @@ def shrink_window(window, n_pixels):
         window.height - 2 * n_pixels
     )
 
-def open_s3_raster(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    memfile = MemoryFile(response.content)
-    return memfile.open()
+# def per_class_kappa(conf_mat):
+#     n_classes = conf_mat.shape[0]
+#     total = conf_mat.sum()
+#     row_marginals = conf_mat.sum(axis=1)
+#     col_marginals = conf_mat.sum(axis=0)
 
-def per_class_kappa(conf_mat):
-    n_classes = conf_mat.shape[0]
-    total = conf_mat.sum()
-    row_marginals = conf_mat.sum(axis=1)
-    col_marginals = conf_mat.sum(axis=0)
-
-    kappas = []
-    for i in range(n_classes):
-        p0 = conf_mat[i, i] / total if total > 0 else 0
-        pe = (row_marginals[i] * col_marginals[i]) / (total ** 2) if total > 0 else 0
-        kappa_i = (p0 - pe) / (1 - pe) if (1 - pe) != 0 else np.nan
-        kappas.append(kappa_i)
-    return kappas
+#     kappas = []
+#     for i in range(n_classes):
+#         p0 = conf_mat[i, i] / total if total > 0 else 0
+#         pe = (row_marginals[i] * col_marginals[i]) / (total ** 2) if total > 0 else 0
+#         kappa_i = (p0 - pe) / (1 - pe) if (1 - pe) != 0 else np.nan
+#         kappas.append(kappa_i)
+#     return kappas
 
 def validate_shade_from_config(config):
     city = config['city']
-    local_shade_urls = config['shade_local']
-    global_shade_urls = config['shade_global']
+    local_shade_paths = config['shade_local_paths']
+    global_shade_paths = config['shade_global_paths']
     output_dir = Path(f"results/shade/{city}/metrics")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    base_time_steps = [url.split('_')[-1].replace('.tif','') for url in local_shade_urls]
+    base_time_steps = [Path(path).stem.split('_')[-1] for path in local_shade_paths]
     class_labels = ["Building Shade", "Tree Shade", "No Shade"]
 
     weighted_results = []
@@ -78,23 +89,30 @@ def validate_shade_from_config(config):
     per_class_kappa_results = []
     confusion_results = []
 
-    for time, local_url, global_url in zip(base_time_steps, local_shade_urls, global_shade_urls):
-        with open_s3_raster(local_url) as src_local, open_s3_raster(global_url) as src_global:
-            if src_local.crs != src_global.crs:
-                raise ValueError("CRS mismatch. Reproject manually before validation.")
+    for time, local_path, global_path in zip(base_time_steps, local_shade_paths, global_shade_paths):
+        print(f"Processing {time}: {local_path} vs {global_path}")
+        
+        try:
+            with rasterio.open(local_path) as src_local, rasterio.open(global_path) as src_global:
+                if src_local.crs != src_global.crs:
+                    raise ValueError("CRS mismatch. Reproject manually before validation.")
 
-            if src_local.transform != src_global.transform or src_local.shape != src_global.shape:
-                print(f"❗️ {time}: Raster mismatch. Cropping.")
-                win_local, win_global = get_overlap_window(src_local, src_global)
-                win_local = shrink_window(win_local, 10)
-                win_global = shrink_window(win_global, 10)
-                raw_local = src_local.read(1, window=win_local)
-                raw_global = src_global.read(1, window=win_global)
-            else:
-                print(f"✅ {time}: Aligned. Proceeding.")
-                window = shrink_window(Window(0, 0, src_local.width, src_local.height), 10)
-                raw_local = src_local.read(1, window=window)
-                raw_global = src_global.read(1, window=window)
+                if src_local.transform != src_global.transform or src_local.shape != src_global.shape:
+                    print(f"❗️ {time}: Raster mismatch. Cropping.")
+                    win_local, win_global = get_overlap_window(src_local, src_global)
+                    win_local = shrink_window(win_local, 10)
+                    win_global = shrink_window(win_global, 10)
+                    raw_local = src_local.read(1, window=win_local)
+                    raw_global = src_global.read(1, window=win_global)
+                else:
+                    print(f"✅ {time}: Aligned. Proceeding.")
+                    window = shrink_window(Window(0, 0, src_local.width, src_local.height), 10)
+                    raw_local = src_local.read(1, window=window)
+                    raw_global = src_global.read(1, window=window)
+
+        except Exception as e:
+            print(f"❌ Error reading files for {time}: {e}")
+            continue
 
         local_data = classify_raster(raw_local)
         global_data = classify_raster(raw_global)
@@ -133,9 +151,25 @@ def validate_shade_from_config(config):
                 "Weighted Prod Acc": round(prod_acc * weight, 4) if not np.isnan(prod_acc) else np.nan
             })
 
-        # Overall Kappa (optional)
+        # Use the calculated weights for the weighted kappa
+        # Extract weights for each class
+        class_weights = [conf_mat[i, :].sum() / total_pixels for i in range(len(class_labels))]
+
+        # TODO: check this method... still doubtful if this is correct
+        # define a weight matrix using these class weights
+        weights = [
+            [1, class_weights[1], class_weights[2]],  # Weights for class 0
+            [class_weights[0], 1, class_weights[2]],  # Weights for class 1
+            [class_weights[0], class_weights[1], 1]   # Weights for class 2
+        ]
+
+        # Calculate weighted kappa
         overall_kappa = cohen_kappa_score(y_true, y_pred)
-        kappa_results.append({"Time": time, "Kappa Coefficient": overall_kappa})
+        # Calculate weighted kappa using a predefined weight scheme
+        overall_kappa_weighted = cohen_kappa_score(y_true, y_pred, weights='linear')
+
+        # Save both kappa results to a new CSV file
+        kappa_results.append({"Time": time, "Kappa Coefficient": overall_kappa, "Weighted Kappa Coefficient": overall_kappa_weighted})
 
         # Save full confusion matrix
         for i, row_label in enumerate(class_labels):
@@ -148,16 +182,29 @@ def validate_shade_from_config(config):
                 })
 
     # Save results
-    pd.DataFrame(kappa_results).to_csv(output_dir / f"shade_kappa_all_{city}.csv", index=False)
+    pd.DataFrame(kappa_results).to_csv(output_dir / f"shade_kappa_comparison_{city}.csv", index=False)
     # pd.DataFrame(per_class_kappa_results).to_csv(output_dir / f"shade_kappa_per_class_{city}.csv", index=False)
     pd.DataFrame(weighted_results).to_csv(output_dir / f"shade_accuracy_weighted_{city}.csv", index=False)
     pd.DataFrame(confusion_results).to_csv(output_dir / f"shade_confusion_matrix_all_{city}.csv", index=False)
     print(f"✅ Shade validation complete for {city}. Results saved to {output_dir.resolve()}")
 
-if __name__ == "__main__":
+def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
 
-    city_name = "RiodeJaneiro"
+    city_name = "Monterrey1"
     config = {"city": city_name, **all_configs[city_name]}
+
+    # Check if local files exist, otherwise download from URL
+    local_shade_paths = config['shade_local_paths']
+    global_shade_paths = config['shade_global_paths']
+    for local_path, global_path in zip(local_shade_paths, global_shade_paths):
+        if not file_exists_locally(local_path):
+            download_from_url(config['url_local_shade'], local_path)
+        if not file_exists_locally(global_path):
+            download_from_url(config['url_global_shade'], global_path)
+
     validate_shade_from_config(config)
+
+if __name__ == "__main__":
+    main() 

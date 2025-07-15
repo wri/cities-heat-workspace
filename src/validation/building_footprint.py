@@ -8,6 +8,7 @@ import yaml
 import pandas as pd
 from sklearn.metrics import confusion_matrix, cohen_kappa_score
 import random
+import requests
 
 def open_local_raster(file_path):
     return rasterio.open(file_path)
@@ -203,6 +204,25 @@ def validate_building_footprint(city, global_dsm_path, global_dem_path, local_ds
         print("\nPoint Sampling Summary:")
         print(point_results_df)
 
+# Function to check if a file exists locally
+
+def file_exists_locally(file_path):
+    return Path(file_path).exists()
+
+# Function to download a file from a URL
+
+def download_from_url(url, local_path):
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        with open(local_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        print(f"Downloaded {url} to {local_path}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading {url}: {e}")
+
+# Modify the main function to check for local files and download from URL if necessary
 
 def main():
     with open("config/city_config.yaml", "r") as f:
@@ -218,6 +238,16 @@ def main():
     global_dem_path = all_configs[CITY_NAME]['global_dem_path']
     local_dsm_path = all_configs[CITY_NAME]['local_dsm_path']
     local_dem_path = all_configs[CITY_NAME]['local_dem_path']
+
+    # Check if local files exist, otherwise download from URL
+    if not file_exists_locally(global_dsm_path):
+        download_from_url(all_configs[CITY_NAME]['url_global_dsm'], global_dsm_path)
+    if not file_exists_locally(global_dem_path):
+        download_from_url(all_configs[CITY_NAME]['url_global_dem'], global_dem_path)
+    if not file_exists_locally(local_dsm_path):
+        download_from_url(all_configs[CITY_NAME]['url_local_dsm'], local_dsm_path)
+    if not file_exists_locally(local_dem_path):
+        download_from_url(all_configs[CITY_NAME]['url_local_dem'], local_dem_path)
 
     output_dir = Path(f"results/buildings/{CITY_NAME}/footprint/metrics")
     output_dir.mkdir(parents=True, exist_ok=True)
