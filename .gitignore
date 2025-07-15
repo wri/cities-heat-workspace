@@ -171,3 +171,6 @@ todo.md
 
 #ignore notebooks temporarily
 notebooks/
+
+#ignore test files
+src/tests
