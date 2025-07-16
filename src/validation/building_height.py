@@ -12,10 +12,8 @@ import yaml
 import sys
 sys.path.append('src')
 from visualization.building_height_viz import plot_building_height_validation
-import boto3
-from botocore.exceptions import NoCredentialsError
 
-# TODO: merge s3 opening and local opening into one script - for everything
+
 # TODO: this is the only one that calls the viz script in the validation script. maybe apply it for other scripts as well? 
 
 
@@ -97,15 +95,11 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
     
     valid_mask_zscore = (z_score > -3) & (z_score < 3)
 
-    # # filter outliers using signed error range
-    # error_threshold = 15  # meters
-    # valid_mask = (height_errors > -error_threshold) & (height_errors < error_threshold)
-
-    # calculate bias metrics
+    # calculate positive/negative metrics
     positive_errors = height_errors[height_errors > 0]
     negative_errors = height_errors[height_errors < 0]
 
-    # Z-score filtered data
+    # z-score filtered data
     local_filtered = local_vals[valid_mask_zscore]
     global_filtered = global_vals[valid_mask_zscore]
     height_errors_filtered = height_errors[valid_mask_zscore]
@@ -113,14 +107,14 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
     positive_errors_filtered = height_errors_filtered[height_errors_filtered > 0]
     negative_errors_filtered = height_errors_filtered[height_errors_filtered < 0]
 
-    # Z-score filtered metrics
+    # z-score filtered metrics
     mae_filtered = mean_absolute_error(local_filtered, global_filtered)
     r2_filtered = r2_score(local_filtered, global_filtered)
     mean_bias_filtered = np.mean(height_errors_filtered)
     std_filtered = np.std(height_errors_filtered)
     rmse_filtered = np.sqrt(np.mean(height_errors_filtered**2))
 
-    # Unfiltered metrics (using all valid finite data)
+    # unfiltered metrics (using all valid finite data)
     mae_unfiltered = mean_absolute_error(local_vals, global_vals)
     r2_unfiltered = r2_score(local_vals, global_vals)
     mean_bias_unfiltered = np.mean(height_errors)

@@ -4,9 +4,9 @@ Main entry point for running validation for a city.
 import argparse
 import yaml
 from pathlib import Path
-from ..validation.building_footprint_path import validate_building_footprint, validate_building_height
+from ..validation.building_footprint import validate_building_footprint, validate_building_height
 from .shade import validate_shade
-from ..validation.utci_val import validate_utci
+from .utci_val import validate_utci
 
 def main():
     parser = argparse.ArgumentParser(description="Run validation for a city.")

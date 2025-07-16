@@ -9,13 +9,11 @@ from pathlib import Path
 import yaml
 import requests
 
-# Function to check if a file exists locally
-
+# check if file exists locally
 def file_exists_locally(file_path):
     return Path(file_path).exists()
 
-# Function to download a file from a URL
-
+# use url if not locally available
 def download_from_url(url, local_path):
     try:
         response = requests.get(url, stream=True)
@@ -134,7 +132,7 @@ def validate_shade_from_config(config):
         # for label, k in zip(class_labels, class_kappas):
         #     per_class_kappa_results.append({"Time": time, "Class": label, "Per-Class Kappa": k})
 
-        # Weighted Accuracy
+        # weighted accuracy
         total_pixels = conf_mat.sum()
         for i, label in enumerate(class_labels):
             actual_total = conf_mat[i, :].sum()
@@ -148,30 +146,21 @@ def validate_shade_from_config(config):
                 "Producer Accuracy": round(prod_acc, 3),
                 "Weight": round(weight, 4),
                 "Weighted User Acc": round(user_acc * weight, 4) if not np.isnan(user_acc) else np.nan,
-                "Weighted Prod Acc": round(prod_acc * weight, 4) if not np.isnan(prod_acc) else np.nan
-            })
+                "Weighted Prod Acc": round(prod_acc * weight, 4) if not np.isnan(prod_acc) else np.nan 
+                })
 
-        # Use the calculated weights for the weighted kappa
-        # Extract weights for each class
-        class_weights = [conf_mat[i, :].sum() / total_pixels for i in range(len(class_labels))]
+        
 
-        # TODO: check this method... still doubtful if this is correct
-        # define a weight matrix using these class weights
-        weights = [
-            [1, class_weights[1], class_weights[2]],  # Weights for class 0
-            [class_weights[0], 1, class_weights[2]],  # Weights for class 1
-            [class_weights[0], class_weights[1], 1]   # Weights for class 2
-        ]
-
-        # Calculate weighted kappa
         overall_kappa = cohen_kappa_score(y_true, y_pred)
-        # Calculate weighted kappa using a predefined weight scheme
-        overall_kappa_weighted = cohen_kappa_score(y_true, y_pred, weights='linear')
+        
+        # TODO: check this method... still doubtful if this is correct
+        # but this weight assuemes class as ordinal, which is not the case
+        # overall_kappa_weighted = cohen_kappa_score(y_true, y_pred, weights='linear') 
 
-        # Save both kappa results to a new CSV file
-        kappa_results.append({"Time": time, "Kappa Coefficient": overall_kappa, "Weighted Kappa Coefficient": overall_kappa_weighted})
+        # save results
+        kappa_results.append({"Time": time, "Kappa Coefficient": overall_kappa})
 
-        # Save full confusion matrix
+        # save confusion matrix
         for i, row_label in enumerate(class_labels):
             for j, col_label in enumerate(class_labels):
                 confusion_results.append({
@@ -181,9 +170,8 @@ def validate_shade_from_config(config):
                     "Count": conf_mat[i, j]
                 })
 
-    # Save results
-    pd.DataFrame(kappa_results).to_csv(output_dir / f"shade_kappa_comparison_{city}.csv", index=False)
-    # pd.DataFrame(per_class_kappa_results).to_csv(output_dir / f"shade_kappa_per_class_{city}.csv", index=False)
+    # save results
+    pd.DataFrame(kappa_results).to_csv(output_dir / f"shade_kappa_{city}.csv", index=False)
     pd.DataFrame(weighted_results).to_csv(output_dir / f"shade_accuracy_weighted_{city}.csv", index=False)
     pd.DataFrame(confusion_results).to_csv(output_dir / f"shade_confusion_matrix_all_{city}.csv", index=False)
     print(f"✅ Shade validation complete for {city}. Results saved to {output_dir.resolve()}")
@@ -195,7 +183,7 @@ def main():
     city_name = "Monterrey1"
     config = {"city": city_name, **all_configs[city_name]}
 
-    # Check if local files exist, otherwise download from URL
+    # check if local files exist, otherwise download from url
     local_shade_paths = config['shade_local_paths']
     global_shade_paths = config['shade_global_paths']
     for local_path, global_path in zip(local_shade_paths, global_shade_paths):

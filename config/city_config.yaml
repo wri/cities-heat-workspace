@@ -1,3 +1,12 @@
+
+# every [city] should have (either or both s3 and local paths)
+# a set of global (dsm(1), dem(1), shade(3), utci(3))
+# a set of local (dsm(1), dem(1), shade(3), utci(3))
+# a set of masks (pedestrian(1), land_use(1)) # ⚠️ optional
+# a set of 20m local (dsm(1), dem(1), shade(3), utci(3))
+# a set of 20m global (dsm(1), dem(1), shade(3), utci(3))
+# a set of 20m masks (pedestrian(1), land_use(1)) # ⚠️ optional
+
 Monterrey1:
   global_dsm: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/output_local_v4/global_building_dems/cif_dsm_ground_build.tif
   local_dsm: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/output_local_v4/dsm_building_final_clipped.tif
@@ -55,16 +64,52 @@ Monterrey1:
   mask_paths_20m:
     pedestrian_mask_path: data/resampled/Monterrey1/masks/pedestrian_mask_path_20m.tif
 
+# ⚠️ pedestrian mask
+# ⚠️ 20m resolution
 Monterrey2:
-  global_dsm: null
-  local_dsm: null
-  global_dem: null
-  local_dem: null
-  shade_global: []
-  shade_local: []
-  utci_global: []
-  utci_local: []
-  pedestrian_mask: null
+  global_dsm: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/cif_dsm_ground_build.tif
+  global_dsm_path: /Users/hyejijoh/Desktop/mty2/global/cif_dsm_ground_build.tif
+  local_dsm: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/local/dsm_reprojected.tif
+  local_dsm_path: /Users/hyejijoh/Desktop/mty2/local/dsm_reprojected.tif
+  global_dem: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/cif_dem.tif
+  global_dem_path: /Users/hyejijoh/Desktop/mty2/global/cif_dem.tif
+  local_dem: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/local/dem_reprojected.tif
+  local_dem_path: /Users/hyejijoh/Desktop/mty2/local/dem_reprojected.tif
+  shade_global: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/Shadow_2023_172_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/Shadow_2023_172_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/Shadow_2023_172_1800D.tif
+  shade_global_paths:
+  - /Users/hyejijoh/Desktop/mty2/global/Shadow_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty2/global/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty2/global/Shadow_2023_172_1800D.tif
+  shade_local: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/local/Shadow_2023_172_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/local/Shadow_2023_172_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/local/Shadow_2023_172_1800D.tif
+  shade_local_paths:
+  - /Users/hyejijoh/Desktop/mty2/local/Shadow_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty2/local/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty2/local/Shadow_2023_172_1800D.tif
+  utci_global: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/UTCI_2023_172_1200.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/UTCI_2023_172_1500.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/UTCI_2023_172_1800.tif
+  utci_global_paths:
+  - /Users/hyejijoh/Desktop/mty2/global/UTCI_2023_172_1200.tif
+  - /Users/hyejijoh/Desktop/mty2/global/UTCI_2023_172_1500.tif
+  - /Users/hyejijoh/Desktop/mty2/global/UTCI_2023_172_1800.tif
+  utci_local: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/local/UTCI_2023_172_1200.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/local/UTCI_2023_172_1500.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/local/UTCI_2023_172_1800.tif  
+  utci_local_paths: 
+  - /Users/hyejijoh/Desktop/mty2/local/UTCI_2023_172_1200.tif
+  - /Users/hyejijoh/Desktop/mty2/local/UTCI_2023_172_1500.tif
+  - /Users/hyejijoh/Desktop/mty2/local/UTCI_2023_172_1800.tif
+  mask_paths:
+    pedestrian_mask: null
+    land_use_mask: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/local/cif_lulc.tif
 
 
 Monterrey3:
@@ -72,11 +117,28 @@ Monterrey3:
   local_dsm: null
   global_dem: null
   local_dem: null
-  shade_global: []
-  shade_local: []
-  utci_global: []
-  utci_local: []
-  pedestrian_mask: null
+  shade_global: null
+  shade_local:
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty3/local/Shadow_2023_172_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty3/local/Shadow_2023_172_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty3/local/Shadow_2023_172_1800D.tif
+  shade_local_paths:
+  - /Users/hyejijoh/Desktop/mty3/local/Shadow_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty3/local/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty3/local/Shadow_2023_172_1800D.tif
+  utci_global: null
+  utci_local: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty3/local/UTCI_2023_172_1200.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty3/local/UTCI_2023_172_1500.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty3/local/UTCI_2023_172_1800.tif
+  utci_local_paths: 
+  - /Users/hyejijoh/Desktop/mty3/local/UTCI_2023_172_1200.tif
+  - /Users/hyejijoh/Desktop/mty3/local/UTCI_2023_172_1500.tif
+  - /Users/hyejijoh/Desktop/mty3/local/UTCI_2023_172_1800.tif
+  mask_paths:
+    pedestrian_mask: null
+    land_use_mask: null
+
 
 RiodeJaneiro:
   global_dsm_path: /Users/hyejijoh/Desktop/rdj/cif_dsm_ground_build.tif
@@ -137,12 +199,37 @@ RiodeJaneiro:
     land_use_mask_path: null
 
 CapeTown:
+  global_dsm: https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/cif_dsm_ground_build.tif
+  local_dsm: null
+  global_dem: https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/cif_dem.tif
+  local_dem: null
+  shade_global: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/Shadow_2023_1_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/Shadow_2023_172_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/Shadow_2023_172_1800D.tif
+  shade_global_paths:
+  - /Users/hyejijoh/Desktop/capetown/global/Shadow_2023_1_1200D.tif
+  - /Users/hyejijoh/Desktop/capetown/global/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/capetown/global/Shadow_2023_172_1800D.tif
+  shade_local: null
+  utci_global: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/UTCI_2023_1_1200.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/UTCI_2023_172_1500.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/UTCI_2023_172_1800.tif
+  utci_global_paths:
+  - /Users/hyejijoh/Desktop/capetown/global/UTCI_2023_1_1200.tif
+  - /Users/hyejijoh/Desktop/capetown/global/UTCI_2023_172_1500.tif
+  - /Users/hyejijoh/Desktop/capetown/global/UTCI_2023_172_1800.tif
+  utci_local: null
+  pedestrian_mask: null
+
+Amsterdam:
   global_dsm: null
   local_dsm: null
   global_dem: null
   local_dem: null
-  shade_global: []
-  shade_local: []
-  utci_global: []
-  utci_local: []
+  shade_global: null
+  shade_local: null
+  utci_global: null
+  utci_local: null
   pedestrian_mask: null

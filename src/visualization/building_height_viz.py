@@ -9,6 +9,15 @@ import yaml
 def plot_building_height_validation(city, local_filtered, global_filtered, height_errors_filtered, metrics, output_dir):
     r2 = metrics['R²']
 
+    # sample data for scatter plot
+    sample_fraction = 0.1  # 10% sample
+    np.random.seed(42)  
+
+    sample_mask = np.random.rand(len(local_filtered)) < sample_fraction
+
+    local_sampled = local_filtered[sample_mask]
+    global_sampled = global_filtered[sample_mask]
+
     # # histogram of height errors
     # plt.figure(figsize=(6, 6))
     # plt.hist(height_errors_filtered, bins=100, color='blue', edgecolor='gray')
@@ -23,21 +32,42 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
 
     # scatter plot: Global vs Local
     plt.figure(figsize=(6, 6))
-    plt.scatter(local_filtered, global_filtered, s=1, alpha=0.3, color='blue')
-    min_val = min(np.min(local_filtered), np.min(global_filtered))
-    max_val = max(np.max(local_filtered), np.max(global_filtered))
+    plt.scatter(local_sampled, global_sampled, s=0.5, alpha=0.3, color='blue')
+    min_val = min(np.min(local_sampled), np.min(global_sampled))
+    max_val = max(np.max(local_sampled), np.max(global_sampled))
     plt.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5, label='1:1 line') # reference line
-    m, b = np.polyfit(local_filtered, global_filtered, 1) # line of best fit
-    plt.plot(local_filtered, m * local_filtered + b, color="red", label=f"y = {m:.2f}x + {b:.2f}")
-    plt.title(f"{city}: Global vs Local Building Height (Z-score < 3)")
-    plt.text(0.05, 0.95, f"$R^2$ = {r2:.3f}", transform=plt.gca().transAxes, # r2 value
-             fontsize=10, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.7))
-    plt.xlabel("Local (LiDAR) Height (m)")
-    plt.ylabel("Global Height (m)")
+    m, b = np.polyfit(local_sampled, global_sampled, 1) # line of best fit
+    plt.plot(local_sampled, m * local_sampled + b, color="red", label=f"y = {m:.2f}x + {b:.2f}")
+    plt.title(f"{city}: Global vs Local Building Height (Z-score < ±3)")
+    # plt.text(0.05, 0.95, f"$R^2$ = {r2:.3f}", transform=plt.gca().transAxes, # r2 value
+    #          fontsize=10, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.7))
+    plt.xlabel("Local (LiDAR) Building Height (m)")
+    plt.ylabel("Global BuildingHeight (m)")
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.axis('equal')
     plt.savefig(output_dir / "height_scatterplot_zscore_filtered.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+    # scatter plot zoomed-in : Global vs Local
+    plt.figure(figsize=(6, 6))
+    plt.scatter(local_sampled, global_sampled, s=0.5, alpha=0.3, color='blue')
+    min_val = min(np.min(local_sampled), np.min(global_sampled))
+    max_val = max(np.max(local_sampled), np.max(global_sampled))
+    plt.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5, label='1:1 line') # reference line
+    m, b = np.polyfit(local_sampled, global_sampled, 1) # line of best fit
+    plt.plot(local_sampled, m * local_sampled + b, color="red", label=f"y = {m:.2f}x + {b:.2f}")
+    plt.title(f"{city}: Global vs Local Building Height (Z-score < ±3)")
+    # plt.text(0.05, 0.95, f"$R^2$ = {r2:.3f}", transform=plt.gca().transAxes, # r2 value
+    #          fontsize=10, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.7))
+    plt.xlabel("Local (LiDAR) Building Height (m)")
+    plt.ylabel("Global BuildingHeight (m)")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.axis('equal')
+    plt.xlim(-10, 0.75*max_val)  # Set x-axis limit
+    plt.ylim(-10, 0.75*max_val)  # Set y-axis limit
+    plt.savefig(output_dir / "height_scatterplot_zoomed_zscore_filtered.png", dpi=300, bbox_inches='tight')
     plt.close()
 
     #print(f"min_val: {min_val}, max_val: {max_val}")

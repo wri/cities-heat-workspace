@@ -12,17 +12,17 @@ utc_offset = -600
 
 ## folder for MRT rasters
 ## MRT rasters within dir MUST be in solweig format: Tmrt_[year]_[day of year]_[local time][letter].tif
-mrt_dir = "/Users/hyejijoh/Desktop/rdj/"
+mrt_dir = "/Users/hyejijoh/Desktop/mty2/local/"
 
 ## text file of meteorology data
 ## this can be created from ERA5 reanalysis using the met_preprocessing file
 ## must contain: 'time' (date & time in utc), 'temp' (air temperature in C), 
 ## 'wind' (wind speed in m/s), 'vpd' (vapor pressure deficit in hPa)
 
-met_file = "/Users/hyejijoh/Desktop/rdj/metforcing.txt"
+met_file = "/Users/hyejijoh/Desktop/mty2/local/metforcing.txt"
 
 ## folder to save UTCI output files
-out_dir = "/Users/hyejijoh/Desktop/rdj/"
+out_dir = "/Users/hyejijoh/Desktop/mty2/local/"
 
 
 ############ FUNCTIONS ############
