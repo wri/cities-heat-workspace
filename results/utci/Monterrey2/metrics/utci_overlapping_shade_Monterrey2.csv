@@ -1,0 +1,4 @@
+Shade Type,No Differences (number of pixels),Percentage Non-zero Differences (%),Percentage Overlapping (%),Min Difference (local - global),Median Difference (local - global),Max Difference (local - global),Std Difference
+Building Shade,1,99.9971,45.6096,-0.6836,0.1012,0.6939,0.0954
+Tree Shade,6,99.9923,87.6059,-0.7667,0.0039,0.5691,0.0594
+No Shade,16,99.9959,88.2381,-1.7544,0.001,1.6522,0.1807

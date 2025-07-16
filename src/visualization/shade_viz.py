@@ -9,7 +9,7 @@ import yaml
 def load_metrics(input_dir, city_name):
     # accuracy_all_df = pd.read_csv(input_dir / f"shade_accuracy_all_{city_name}.csv")
     accuracy_weighted_df = pd.read_csv(input_dir / f"shade_accuracy_weighted_{city_name}.csv")
-    kappa_df = pd.read_csv(input_dir / f"shade_kappa_all_{city_name}.csv")
+    kappa_df = pd.read_csv(input_dir / f"shade_kappa_{city_name}.csv")
     confusion_df = pd.read_csv(input_dir / f"shade_confusion_matrix_all_{city_name}.csv")
     return accuracy_weighted_df, kappa_df, confusion_df
 
@@ -238,7 +238,7 @@ def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
 
-    city_name = "RiodeJaneiro"
+    city_name = "Monterrey2"
     config = {"city": city_name, **all_configs[city_name]}
     USE_SIGNED_ERROR = True  # Toggle between signed and absolute error
 

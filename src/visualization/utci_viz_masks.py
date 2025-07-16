@@ -11,8 +11,6 @@ from rasterio.windows import from_bounds, Window
 from rasterio.coords import BoundingBox
 from rasterio.warp import transform_bounds
 
-#TODO: incorporate into main utci_viz file
-
 # sample pixel numbers for scatter plots
 SAMPLE_SIZE = 30000
 RANDOM_SEED = 42
@@ -62,7 +60,7 @@ def shrink_window(window, n_pixels):
 def sample_df(df, n=SAMPLE_SIZE):
     return df.sample(n=n, random_state=RANDOM_SEED) if len(df) > n else df
 
-def plot_utci_pixel_scatter_for_mask(local_utci_paths, global_utci_paths, shade_paths, mask_path, mask_name, output_dir, city_name):
+def plot_utci_pixel_scatter_with_masks(local_utci_paths, global_utci_paths, shade_paths, mask_path, mask_name, output_dir, city_name):
     print(f"\nGenerating pixel scatter plots for {city_name} - {mask_name}")
     
     time_steps = [Path(p).stem.split('_')[-1] for p in local_utci_paths]
@@ -297,7 +295,7 @@ def plot_utci_pixel_scatter_for_mask(local_utci_paths, global_utci_paths, shade_
         plt.close()
         print(f"✅ Saved: {output_path}")
 
-def plot_utci_lines_for_mask(metrics_csv, output_dir, city_name, mask_name):
+def plot_utci_lines_with_masks(metrics_csv, output_dir, city_name, mask_name):
     df = pd.read_csv(metrics_csv)
     masks = df['Mask'].unique()
 
@@ -337,7 +335,7 @@ def plot_utci_lines_for_mask(metrics_csv, output_dir, city_name, mask_name):
         plt.close()
         print(f"✅ Saved: {out_path}")
 
-def plot_utci_error_lines_for_mask(metrics_csv, output_dir, city_name, mask_name):
+def plot_utci_error_lines_with_masks(metrics_csv, output_dir, city_name, mask_name):
     df = pd.read_csv(metrics_csv)
     masks = df['Mask'].unique()
 
@@ -378,9 +376,9 @@ def visualize_utci_for_mask(city_name, mask_name, mask_path, local_utci_paths, g
     
     try:
         # generate all plots
-        plot_utci_pixel_scatter_for_mask(local_utci_paths, global_utci_paths, shade_paths, mask_path, mask_name, output_dir, city_name)
-        plot_utci_lines_for_mask(metrics_file, output_dir, city_name, mask_name)
-        plot_utci_error_lines_for_mask(metrics_file, output_dir, city_name, mask_name)
+        plot_utci_pixel_scatter_with_masks(local_utci_paths, global_utci_paths, shade_paths, mask_path, mask_name, output_dir, city_name)
+        plot_utci_lines_with_masks(metrics_file, output_dir, city_name, mask_name)
+        plot_utci_error_lines_with_masks(metrics_file, output_dir, city_name, mask_name)
         
         print(f"✅ All UTCI visualizations completed for {mask_name}")
         

@@ -1,0 +1,2 @@
+City,Sample_Points,True_Buildings,Predicted_Buildings,Overall_Accuracy,User_Accuracy,Producer_Accuracy,Kappa
+Monterrey2,500,122,106,0.896,0.8301886792452831,0.7213114754098361,0.7050013615321775

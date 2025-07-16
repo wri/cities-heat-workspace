@@ -309,7 +309,7 @@ def main():
         all_configs = yaml.safe_load(f)
 
     # ‼️ change the city name here based on the city name in city_config.yaml
-    city_name = "Monterrey1"
+    city_name = "Monterrey2"    
     config = {"city": city_name, **all_configs[city_name]}
 
     # file paths

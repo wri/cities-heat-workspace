@@ -62,7 +62,7 @@ Monterrey1:
   - data/resampled/Monterrey1/utci/global/UTCI_2023_172_1500D_20m.tif
   - data/resampled/Monterrey1/utci/global/UTCI_2023_172_1800D_20m.tif
   mask_paths_20m:
-    pedestrian_mask_path: data/resampled/Monterrey1/masks/pedestrian_mask_path_20m.tif
+    pedestrian_mask_20m_path: data/resampled/Monterrey1/masks/pedestrian_mask_path_20m.tif
 
 # ⚠️ pedestrian mask
 # ⚠️ 20m resolution
