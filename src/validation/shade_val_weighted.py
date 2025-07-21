@@ -82,9 +82,9 @@ def validate_shade_from_config(config):
     base_time_steps = [Path(path).stem.split('_')[-1] for path in local_shade_paths]
     class_labels = ["Building Shade", "Tree Shade", "No Shade"]
 
-    weighted_results = []
+    weighted_results_local = []
+    weighted_results_global = []
     kappa_results = []
-    per_class_kappa_results = []
     confusion_results = []
 
     for time, local_path, global_path in zip(base_time_steps, local_shade_paths, global_shade_paths):
@@ -127,35 +127,41 @@ def validate_shade_from_config(config):
         print(f"\n🔍 [{time}] Confusion Matrix:")
         print(pd.DataFrame(conf_mat, index=class_labels, columns=class_labels))
 
-        # # Per-class Kappa
-        # class_kappas = per_class_kappa(conf_mat)
-        # for label, k in zip(class_labels, class_kappas):
-        #     per_class_kappa_results.append({"Time": time, "Class": label, "Per-Class Kappa": k})
-
-        # weighted accuracy
-        total_pixels = conf_mat.sum()
+        # Weighted by local data (row totals)
+        total_pixels_local = conf_mat.sum()
         for i, label in enumerate(class_labels):
-            actual_total = conf_mat[i, :].sum()
+            actual_total_local = conf_mat[i, :].sum()
             user_acc = conf_mat[i, i] / conf_mat[:, i].sum() if conf_mat[:, i].sum() > 0 else np.nan
-            prod_acc = conf_mat[i, i] / actual_total if actual_total > 0 else np.nan
-            weight = actual_total / total_pixels if total_pixels > 0 else 0
-            weighted_results.append({
+            prod_acc = conf_mat[i, i] / actual_total_local if actual_total_local > 0 else np.nan
+            weight_local = actual_total_local / total_pixels_local if total_pixels_local > 0 else 0
+            weighted_results_local.append({
                 "Time": time,
                 "Class": label,
                 "User Accuracy": round(user_acc, 3),
                 "Producer Accuracy": round(prod_acc, 3),
-                "Weight": round(weight, 4),
-                "Weighted User Acc": round(user_acc * weight, 4) if not np.isnan(user_acc) else np.nan,
-                "Weighted Prod Acc": round(prod_acc * weight, 4) if not np.isnan(prod_acc) else np.nan 
-                })
+                "Weight (Local)": round(weight_local, 4),
+                "Weighted User Acc (Local)": round(user_acc * weight_local, 4) if not np.isnan(user_acc) else np.nan,
+                "Weighted Prod Acc (Local)": round(prod_acc * weight_local, 4) if not np.isnan(prod_acc) else np.nan 
+            })
 
-        
+        # Weighted by global data (column totals)
+        total_pixels_global = conf_mat.sum()
+        for i, label in enumerate(class_labels):
+            actual_total_global = conf_mat[:, i].sum()
+            user_acc = conf_mat[i, i] / conf_mat[:, i].sum() if conf_mat[:, i].sum() > 0 else np.nan
+            prod_acc = conf_mat[i, i] / conf_mat[i, :].sum() if conf_mat[i, :].sum() > 0 else np.nan
+            weight_global = actual_total_global / total_pixels_global if total_pixels_global > 0 else 0
+            weighted_results_global.append({
+                "Time": time,
+                "Class": label,
+                "User Accuracy": round(user_acc, 3),
+                "Producer Accuracy": round(prod_acc, 3),
+                "Weight (Global)": round(weight_global, 4),
+                "Weighted User Acc (Global)": round(user_acc * weight_global, 4) if not np.isnan(user_acc) else np.nan,
+                "Weighted Prod Acc (Global)": round(prod_acc * weight_global, 4) if not np.isnan(prod_acc) else np.nan 
+            })
 
-        overall_kappa = cohen_kappa_score(y_true, y_pred)
-        
-        # TODO: check this method... still doubtful if this is correct
-        # but this weight assuemes class as ordinal, which is not the case
-        # overall_kappa_weighted = cohen_kappa_score(y_true, y_pred, weights='linear') 
+        overall_kappa = cohen_kappa_score(y_true, y_pred) 
 
         # save results
         kappa_results.append({"Time": time, "Kappa Coefficient": overall_kappa})
@@ -172,7 +178,8 @@ def validate_shade_from_config(config):
 
     # save results
     pd.DataFrame(kappa_results).to_csv(output_dir / f"shade_kappa_{city}.csv", index=False)
-    pd.DataFrame(weighted_results).to_csv(output_dir / f"shade_accuracy_weighted_{city}.csv", index=False)
+    pd.DataFrame(weighted_results_local).to_csv(output_dir / f"shade_accuracy_weighted_local_{city}.csv", index=False)
+    pd.DataFrame(weighted_results_global).to_csv(output_dir / f"shade_accuracy_weighted_global_{city}.csv", index=False)
     pd.DataFrame(confusion_results).to_csv(output_dir / f"shade_confusion_matrix_all_{city}.csv", index=False)
     print(f"✅ Shade validation complete for {city}. Results saved to {output_dir.resolve()}")
 
@@ -180,7 +187,7 @@ def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
 
-    city_name = "Monterrey2"
+    city_name = "RiodeJaneiro"
     config = {"city": city_name, **all_configs[city_name]}
 
     # check if local files exist, otherwise download from url

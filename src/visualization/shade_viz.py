@@ -238,7 +238,7 @@ def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
 
-    city_name = "Monterrey2"
+    city_name = "Monterrey3"
     config = {"city": city_name, **all_configs[city_name]}
     USE_SIGNED_ERROR = True  # Toggle between signed and absolute error
 

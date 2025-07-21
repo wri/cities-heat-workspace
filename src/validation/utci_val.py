@@ -62,14 +62,9 @@ def compute_stats(y_true, y_pred):
         'Std Pred (global)': round(np.std(y_pred), 4)
     }
 
-def validate_utci_from_config(config):
-    city = config['city']
-    local_utci_paths = config['utci_local_paths']
-    global_utci_paths = config['utci_global_paths']
-    shade_paths_local = config['shade_local_paths']  
-    shade_paths_global = config['shade_global_paths']
-    output_dir = Path(f"results/utci/{city}/metrics")
-    output_dir.mkdir(parents=True, exist_ok=True)
+def validate_utci_from_config(city, local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global, output_dir):
+    # Use the provided paths and output_dir for validation
+    print(f"Validating UTCI for {city}")
     
     base_time_steps = [Path(path).stem.split('_')[-1] for path in local_utci_paths]
     stats_results = []
@@ -257,25 +252,52 @@ def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
     
-    city_name = "Monterrey2"
+    city_name = "Monterrey3"
     config = {"city": city_name, **all_configs[city_name]}
 
-    # Check if local files exist, otherwise download from URL
+    # Select paths
     local_utci_paths = config['utci_local_paths']
     global_utci_paths = config['utci_global_paths']
     shade_paths_local = config['shade_local_paths']
     shade_paths_global = config['shade_global_paths']
-    for local_path, global_path, shade_path_local, shade_path_global in zip(local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global):
-        if not file_exists_locally(local_path):
-            download_from_url(config['utci_local'], local_path)
-        if not file_exists_locally(global_path):
-            download_from_url(config['utci_global'], global_path)
-        if not file_exists_locally(shade_path_local):
-            download_from_url(config['shade_local'], shade_path_local)
-        if not file_exists_locally(shade_path_global):
-            download_from_url(config['shade_global'], shade_path_global)
 
-    validate_utci_from_config(config)
+    # Debug: Print paths to verify
+    print("Local UTCI Paths:", local_utci_paths)
+    print("Global UTCI Paths:", global_utci_paths)
+
+    # Check if any path contains '_20m'
+    is_20m = any('_20m' in path for path in local_utci_paths + global_utci_paths)
+
+    # Debug: Print the result of is_20m
+    print("Is 20m data:", is_20m)
+
+    # Set the output directory
+    output_dir = Path(f"results/utci/{city_name}/20m/metrics") if is_20m else Path(f"results/utci/{city_name}/metrics")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Debug: Print the output directory
+    print("Output Directory:", output_dir)
+
+    # # Check if local files exist, otherwise download from URL
+    # for local_path, global_path, shade_path_local, shade_path_global in zip(local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global):
+    #     if not file_exists_locally(local_path):
+    #         download_from_url(config['utci_local'], local_path)
+    #     if not file_exists_locally(global_path):
+    #         download_from_url(config['utci_global'], global_path)
+    #     if not file_exists_locally(shade_path_local):
+    #         download_from_url(config['shade_local'], shade_path_local)
+    #     if not file_exists_locally(shade_path_global):
+    #         download_from_url(config['shade_global'], shade_path_global)
+
+    # Determine if the paths are for 20m data
+    # is_20m = any('_20m' in path for path in local_utci_paths + global_utci_paths)
+
+    # Set the output directory
+    # output_dir = Path(f"results/utci/{city_name}/20m/metrics") if is_20m else Path(f"results/utci/{city_name}/metrics")
+    # output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Pass the city name, paths, and output directory to the validation function
+    validate_utci_from_config(city_name, local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global, output_dir)
 
 if __name__ == "__main__":
     main() 

@@ -199,7 +199,7 @@ def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
     
-    city_name = "Monterrey1"
+    city_name = "RiodeJaneiro"
     config = {"city": city_name, **all_configs[city_name]}
     
     local_utci_paths = config['utci_local_paths']
@@ -208,7 +208,7 @@ def main():
     
     masks = {
         "pedestrian": config.get('mask_paths', {}).get('pedestrian_mask_path'),
-        # "non_building": config.get('mask_paths', {}).get('land_use_mask_path')
+        "non_building": config.get('mask_paths', {}).get('land_use_mask_path')
     }
     
     print(f"Starting UTCI validation for {city_name}")
