@@ -237,11 +237,11 @@ CapeTown:
   - /Users/hyejijoh/Desktop/capetown/global/UTCI_2023_172_1500.tif
   - /Users/hyejijoh/Desktop/capetown/global/UTCI_2023_172_1800.tif
   utci_local: null
-mask_paths:
-  land_use_mask: null
-  land_use_mask_path: null
-  pedestrian_mask: null
-  pedestrian_mask_path: null
+  mask_paths:
+    land_use_mask: null
+    land_use_mask_path: null
+    pedestrian_mask: null
+    pedestrian_mask_path: null
 
 Amsterdam:
   global_dsm: null
@@ -272,8 +272,8 @@ Amsterdam:
   - /Users/hyejijoh/Desktop/amsterdam/local/UTCI_2023_189_1200.tif
   - /Users/hyejijoh/Desktop/amsterdam/local/UTCI_2023_189_1500.tif
   - /Users/hyejijoh/Desktop/amsterdam/local/UTCI_2023_189_1800.tif
-mask_paths:
-  land_use_mask: null
-  land_use_mask_path: /Users/hyejijoh/Desktop/amsterdam/ams_lulc_binary.tif
-  pedestrian_mask: null
-  pedestrian_mask_path: null
+  mask_paths:
+    land_use_mask: null
+    land_use_mask_path: /Users/hyejijoh/Desktop/amsterdam/ams_lulc_binary.tif
+    pedestrian_mask: null
+    pedestrian_mask_path: null
