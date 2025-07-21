@@ -154,16 +154,15 @@ def validate_shade_from_config(config):
         print(f"\n🔍 [{time}] Confusion Matrix:")
         print(pd.DataFrame(conf_mat, index=class_labels, columns=class_labels))
 
-        # Calculate area distribution percentages
+        # calculate area distribution percentages
         shade_labels = ["Building Shade", "Tree Shade", "No Shade"]
-        actual_counts = conf_mat.sum(axis=1)  # row sums: local (actual)
-        pred_counts = conf_mat.sum(axis=0)    # col sums: global (predicted)
+        actual_counts = conf_mat.sum(axis=1)  # row sums: local 
+        pred_counts = conf_mat.sum(axis=0)    # col sums: global 
         total_actual = actual_counts.sum()
         total_pred = pred_counts.sum()
         actual_perc = (actual_counts / total_actual * 100) if total_actual > 0 else np.zeros_like(actual_counts)
         pred_perc = (pred_counts / total_pred * 100) if total_pred > 0 else np.zeros_like(pred_counts)
 
-        # Save area distribution results for this time step
         for i, label in enumerate(shade_labels):
             area_distribution_results.append({
                 "Time": time,

@@ -10,6 +10,10 @@ import yaml
 import os
 import json
 
+"""using masks and 20m resolution data for shade metrics validation"""
+#TODO: check again for masking -> statistical analysis
+
+
 def classify_raster(data):
     shade_classes = {0.00: 0, 0.03: 1, 1.00: 2}
     classified = np.full(data.shape, -1, dtype=np.int8)
