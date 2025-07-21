@@ -1,0 +1,10 @@
+Time,Class,User Accuracy,Producer Accuracy,Weight (Local),Weighted User Acc (Local),Weighted Prod Acc (Local)
+1200D,Building Shade,0.221,0.41,0.0709,0.0157,0.0291
+1200D,Tree Shade,0.825,0.776,0.0839,0.0692,0.0651
+1200D,No Shade,0.938,0.877,0.8451,0.7931,0.7409
+1500D,Building Shade,0.018,0.193,0.003,0.0001,0.0006
+1500D,Tree Shade,0.865,0.853,0.0861,0.0744,0.0734
+1500D,No Shade,0.986,0.956,0.9109,0.8981,0.8707
+1800D,Building Shade,0.37,0.535,0.1567,0.058,0.0838
+1800D,Tree Shade,0.764,0.675,0.0845,0.0645,0.057
+1800D,No Shade,0.893,0.823,0.7589,0.6779,0.6245

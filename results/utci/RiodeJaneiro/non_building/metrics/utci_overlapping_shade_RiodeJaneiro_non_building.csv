@@ -1,0 +1,10 @@
+Shade Type,No Differences (number of pixels),Percentage Non-zero Differences (%),Min Difference (local - global),Median Difference (local - global),Max Difference (local - global),Std Difference
+Building Shade,0,100.0,-9.4722,-0.1577,2.4697,2.6173
+Tree Shade,7,99.9985,-9.2918,0.0062,3.4639,0.8272
+No Shade,9,99.9993,-2.4801,0.0602,9.6849,2.52
+Building Shade,1,99.9997,-8.359,-0.0335,1.9716,1.7126
+Tree Shade,9,99.998,-7.4442,0.0119,2.4736,0.5338
+No Shade,4,99.9997,-3.1562,0.1615,8.3529,1.8771
+Building Shade,17,99.9982,-3.0953,-0.012,0.951,0.5047
+Tree Shade,11,99.9968,-2.8603,0.008,1.1172,0.2358
+No Shade,2,99.9997,-1.3406,0.1037,3.0044,0.8623

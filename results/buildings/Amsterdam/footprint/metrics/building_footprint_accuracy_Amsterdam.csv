@@ -1,0 +1,2 @@
+City,Sample_Points,True_Buildings,Predicted_Buildings,Overall_Accuracy,User_Accuracy,Producer_Accuracy,Kappa
+Amsterdam,500,191,187,0.92,0.9037433155080213,0.8848167539267016,0.8298827892417876
