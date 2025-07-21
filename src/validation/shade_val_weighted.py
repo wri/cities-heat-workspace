@@ -8,6 +8,7 @@ import pandas as pd
 from pathlib import Path
 import yaml
 import requests
+import json # save boundary results to ensure spatial alignment
 
 # check if file exists locally
 def file_exists_locally(file_path):
@@ -72,12 +73,25 @@ def shrink_window(window, n_pixels):
 #         kappas.append(kappa_i)
 #     return kappas
 
+
+# save cropped bounds for reuse
+def save_crop_bounds(bounds, path):
+    with open(path, "w") as f:
+        json.dump({
+            "left": bounds.left,
+            "bottom": bounds.bottom,
+            "right": bounds.right,
+            "top": bounds.top
+        }, f, indent=2)
+
 def validate_shade_from_config(config):
     city = config['city']
     local_shade_paths = config['shade_local_paths']
     global_shade_paths = config['shade_global_paths']
     output_dir = Path(f"results/shade/{city}/metrics")
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    crop_json_path = output_dir / "crop_window.json"
 
     base_time_steps = [Path(path).stem.split('_')[-1] for path in local_shade_paths]
     class_labels = ["Building Shade", "Tree Shade", "No Shade"]
@@ -95,18 +109,30 @@ def validate_shade_from_config(config):
                 if src_local.crs != src_global.crs:
                     raise ValueError("CRS mismatch. Reproject manually before validation.")
 
-                if src_local.transform != src_global.transform or src_local.shape != src_global.shape:
-                    print(f"❗️ {time}: Raster mismatch. Cropping.")
-                    win_local, win_global = get_overlap_window(src_local, src_global)
-                    win_local = shrink_window(win_local, 10)
-                    win_global = shrink_window(win_global, 10)
-                    raw_local = src_local.read(1, window=win_local)
-                    raw_global = src_global.read(1, window=win_global)
+                bounds_global = src_global.bounds
+                bounds_local_tuple = transform_bounds(src_local.crs, src_global.crs, *src_local.bounds)
+                bounds_local = BoundingBox(*bounds_local_tuple)
+                overlap_bounds = BoundingBox(
+                    max(bounds_global.left, bounds_local.left),
+                    max(bounds_global.bottom, bounds_local.bottom),
+                    min(bounds_global.right, bounds_local.right),
+                    min(bounds_global.top, bounds_local.top)
+                )
+
+                if not crop_json_path.exists():
+                    save_crop_bounds(overlap_bounds, crop_json_path)
+                    print(f"📝 Saved crop window to {crop_json_path}")
                 else:
-                    print(f"✅ {time}: Aligned. Proceeding.")
-                    window = shrink_window(Window(0, 0, src_local.width, src_local.height), 10)
-                    raw_local = src_local.read(1, window=window)
-                    raw_global = src_global.read(1, window=window)
+                    print(f"✅ Using existing crop window from {crop_json_path}")
+
+                window_local = from_bounds(*overlap_bounds, transform=src_local.transform).round_offsets()
+                window_global = from_bounds(*overlap_bounds, transform=src_global.transform).round_offsets()
+
+                window_local = shrink_window(window_local, 10)
+                window_global = shrink_window(window_global, 10)
+
+                raw_local = src_local.read(1, window=window_local)
+                raw_global = src_global.read(1, window=window_global)
 
         except Exception as e:
             print(f"❌ Error reading files for {time}: {e}")

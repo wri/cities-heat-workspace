@@ -7,6 +7,8 @@ from sklearn.metrics import confusion_matrix, cohen_kappa_score
 import pandas as pd
 from pathlib import Path
 import yaml
+import os
+import json
 
 def classify_raster(data):
     shade_classes = {0.00: 0, 0.03: 1, 1.00: 2}
@@ -40,18 +42,32 @@ def shrink_window(window, n_pixels):
         window.width - 2 * n_pixels,
         window.height - 2 * n_pixels
     )
+
 # mask to where value is 1
 def apply_mask_intersection(data, mask_data):
     if mask_data is None:
         return data
-    
     # create a copy to avoid modifying original data
     masked_data = data.copy()
-    
     # set pixels to invalid (-1) where mask is not 1
     masked_data[mask_data != 1] = -1
-    
     return masked_data
+
+def save_crop_bounds(bounds, path):
+    with open(path, "w") as f:
+        json.dump({
+            "left": bounds.left,
+            "bottom": bounds.bottom,
+            "right": bounds.right,
+            "top": bounds.top
+        }, f)
+
+def load_crop_bounds(path):
+    with open(path, "r") as f:
+        b = json.load(f)
+    from rasterio.coords import BoundingBox
+    return BoundingBox(b["left"], b["bottom"], b["right"], b["top"])
+
 
 def validate_shade_mask(config, mask_name, mask_path, output_dir, resolution="1m"):
     city = config['city']
@@ -59,10 +75,7 @@ def validate_shade_mask(config, mask_name, mask_path, output_dir, resolution="1m
     # Select paths based on resolution
     if resolution == "20m":
         local_shade_paths = config.get('shade_local_paths_20m', config['shade_local_paths'])
-        global_shade_paths = config.get('shade_global_paths_20m', config['shade_global_paths'])
-        if 'shade_local_paths_20m' not in config:
-            print(f"⚠️  20m paths not found, falling back to 1m resolution")
-            resolution = "1m"
+        global_shade_paths = config.get('global_shade_paths_20m', config['global_shade_paths'])
     else:
         local_shade_paths = config['shade_local_paths']
         global_shade_paths = config['shade_global_paths']
@@ -81,13 +94,16 @@ def validate_shade_mask(config, mask_name, mask_path, output_dir, resolution="1m
         base_time_steps.append(time_step)
     class_labels = ["Building Shade", "Tree Shade", "No Shade"]
 
-    weighted_results = []
+    weighted_results_local = []
+    weighted_results_global = []
     kappa_results = []
     confusion_results = []
 
     print(f"\n Processing mask: {mask_name}")
     if mask_path:
         print(f"   Using: {mask_path}")
+
+    crop_json_path = output_dir.parent.parent / "metrics" / "crop_window.json"
 
     for time, local_path, global_path in zip(base_time_steps, local_shade_paths, global_shade_paths):
         print(f"Processing {time}: {local_path} vs {global_path}")
@@ -99,35 +115,28 @@ def validate_shade_mask(config, mask_name, mask_path, output_dir, resolution="1m
 
                 # handle mask if provided
                 mask_data = None
+                src_mask = None
                 if mask_path:
-                    with rasterio.open(mask_path) as src_mask:
-                        if src_local.crs != src_mask.crs:
-                            raise ValueError("Mask CRS mismatch. Reproject mask to match shade data.")
+                    src_mask = rasterio.open(mask_path)
+                    if src_local.crs != src_mask.crs:
+                        raise ValueError("Mask CRS mismatch. Reproject mask to match shade data.")
 
-                if src_local.transform != src_global.transform or src_local.shape != src_global.shape:
-                    print(f"❗️ {time}: raster mismatch. cropping.")
-                    win_local, win_global = get_overlap_window(src_local, src_global)
-                    win_local = shrink_window(win_local, 10)
-                    win_global = shrink_window(win_global, 10)
-                    raw_local = src_local.read(1, window=win_local)
-                    raw_global = src_global.read(1, window=win_global)
-                    
-                    # read mask data if provided
-                    if mask_path:
-                        with rasterio.open(mask_path) as src_mask:
-                            win_mask, _ = get_overlap_window(src_mask, src_local)
-                            win_mask = shrink_window(win_mask, 10)
-                            mask_data = src_mask.read(1, window=win_mask)
-                else:
-                    print(f"✅ {time}: Aligned. Proceeding.")
-                    window = shrink_window(Window(0, 0, src_local.width, src_local.height), 10)
-                    raw_local = src_local.read(1, window=window)
-                    raw_global = src_global.read(1, window=window)
-                    
-                    # read mask data if provided
-                    if mask_path:
-                        with rasterio.open(mask_path) as src_mask:
-                            mask_data = src_mask.read(1, window=window)
+                # Always load crop bounds from crop_window.json
+                if not crop_json_path.exists():
+                    raise FileNotFoundError(f"Crop window file not found: {crop_json_path}. Run shade_val_weighted.py first.")
+                overlap_bounds = load_crop_bounds(crop_json_path)
+                print(f"✅ Using crop window from {crop_json_path}")
+                window_local = from_bounds(*overlap_bounds, transform=src_local.transform).round_offsets()
+                window_global = from_bounds(*overlap_bounds, transform=src_global.transform).round_offsets()
+                window_local = shrink_window(window_local, 10)
+                window_global = shrink_window(window_global, 10)
+                raw_local = src_local.read(1, window=window_local)
+                raw_global = src_global.read(1, window=window_global)
+                if src_mask:
+                    window_mask = from_bounds(*overlap_bounds, transform=src_mask.transform).round_offsets()
+                    window_mask = shrink_window(window_mask, 10)
+                    mask_data = src_mask.read(1, window=window_mask)
+                    src_mask.close()
 
         except Exception as e:
             print(f"❌ Error reading files for {time}: {e}")
@@ -140,7 +149,7 @@ def validate_shade_mask(config, mask_name, mask_path, output_dir, resolution="1m
         if mask_data is not None:
             local_data = apply_mask_intersection(local_data, mask_data)
             global_data = apply_mask_intersection(global_data, mask_data)
-            print(f"   🎭 Applied {mask_name} mask - analyzing pixels where mask = 1")
+            print(f"   Applied {mask_name} mask - analyzing pixels where mask = 1")
 
         mask = (local_data != -1) & (global_data != -1)
         y_true = local_data[mask].flatten()
@@ -156,22 +165,40 @@ def validate_shade_mask(config, mask_name, mask_path, output_dir, resolution="1m
         print(f"\n Confusion Matrix:")
         print(pd.DataFrame(conf_mat, index=class_labels, columns=class_labels))
 
-        # weighted accuracy
-        total_pixels = conf_mat.sum()
+        # weighted by local data (row totals)
+        total_pixels_local = conf_mat.sum()
         for i, label in enumerate(class_labels):
-            actual_total = conf_mat[i, :].sum()
+            actual_total_local = conf_mat[i, :].sum()
             user_acc = conf_mat[i, i] / conf_mat[:, i].sum() if conf_mat[:, i].sum() > 0 else np.nan
-            prod_acc = conf_mat[i, i] / actual_total if actual_total > 0 else np.nan
-            weight = actual_total / total_pixels if total_pixels > 0 else 0
-            weighted_results.append({
+            prod_acc = conf_mat[i, i] / actual_total_local if actual_total_local > 0 else np.nan
+            weight_local = actual_total_local / total_pixels_local if total_pixels_local > 0 else 0
+            weighted_results_local.append({
                 "Time": time,
                 "mask": mask_name,
                 "Class": label,
                 "User Accuracy": round(user_acc, 3),
                 "Producer Accuracy": round(prod_acc, 3),
-                "Weight": round(weight, 4),
-                "Weighted User Acc": round(user_acc * weight, 4) if not np.isnan(user_acc) else np.nan,
-                "Weighted Prod Acc": round(prod_acc * weight, 4) if not np.isnan(prod_acc) else np.nan
+                "Weight (Local)": round(weight_local, 4),
+                "Weighted User Acc (Local)": round(user_acc * weight_local, 4) if not np.isnan(user_acc) else np.nan,
+                "Weighted Prod Acc (Local)": round(prod_acc * weight_local, 4) if not np.isnan(prod_acc) else np.nan
+            })
+
+        # weighted by global data (column totals)
+        total_pixels_global = conf_mat.sum()
+        for i, label in enumerate(class_labels):
+            actual_total_global = conf_mat[:, i].sum()
+            user_acc = conf_mat[i, i] / conf_mat[:, i].sum() if conf_mat[:, i].sum() > 0 else np.nan
+            prod_acc = conf_mat[i, i] / conf_mat[i, :].sum() if conf_mat[i, :].sum() > 0 else np.nan
+            weight_global = actual_total_global / total_pixels_global if total_pixels_global > 0 else 0
+            weighted_results_global.append({
+                "Time": time,
+                "mask": mask_name,
+                "Class": label,
+                "User Accuracy": round(user_acc, 3),
+                "Producer Accuracy": round(prod_acc, 3),
+                "Weight (Global)": round(weight_global, 4),
+                "Weighted User Acc (Global)": round(user_acc * weight_global, 4) if not np.isnan(user_acc) else np.nan,
+                "Weighted Prod Acc (Global)": round(prod_acc * weight_global, 4) if not np.isnan(prod_acc) else np.nan
             })
 
         # overall kappa
@@ -192,54 +219,63 @@ def validate_shade_mask(config, mask_name, mask_path, output_dir, resolution="1m
     # save results with mask-specific naming
     mask_suffix = f"_{mask_name}" if mask_name != "full_area" else ""
     pd.DataFrame(kappa_results).to_csv(output_dir / f"shade_kappa_all_{city}{mask_suffix}.csv", index=False)
-    pd.DataFrame(weighted_results).to_csv(output_dir / f"shade_accuracy_weighted_{city}{mask_suffix}.csv", index=False)
+    pd.DataFrame(weighted_results_local).to_csv(output_dir / f"shade_accuracy_weighted_local_{city}{mask_suffix}.csv", index=False)
+    pd.DataFrame(weighted_results_global).to_csv(output_dir / f"shade_accuracy_weighted_global_{city}{mask_suffix}.csv", index=False)
     pd.DataFrame(confusion_results).to_csv(output_dir / f"shade_confusion_matrix_all_{city}{mask_suffix}.csv", index=False)
     
     print(f"✅ Shade validation complete for {city} - {mask_name}. Results saved to {output_dir.resolve()}")
 
 def validate_shade_all_masks(config, resolution="1m"):
     city = config['city']
-    
-    # Select mask paths based on resolution
+
+    # Select mask paths based on explicit resolution
     if resolution == "20m":
         mask_paths = config.get('mask_paths_20m', {})
-        if not mask_paths:
-            print(f"⚠️  20m mask paths not found, falling back to 1m resolution")
-            mask_paths = config.get('mask_paths', {})
-            resolution = "1m"
-    else:
+    elif resolution == "1m":
         mask_paths = config.get('mask_paths', {})
-    
-    # define masks
+    else:
+        raise ValueError(f"Unsupported resolution: {resolution}")
+
+    print(f"Mask paths for {city}: {mask_paths}")
+
     masks = {
         "pedestrian": mask_paths.get('pedestrian_mask_path'),
         "non_building": mask_paths.get('land_use_mask_path')
     }
-    
-    print(f"Available mask paths for {resolution}: {mask_paths}")
-    
+
+    print(f"Selected masks: {masks}")
     print(f"Starting shade validation for {city} at {resolution} resolution")
     print(f"   masks to process: {list(masks.keys())}")
-    
+
     for mask_name, mask_path in masks.items():
         if mask_path is None:
             print(f"⚠️  Skipping {mask_name} - no mask path provided")
             continue
-        
-        # create mask-specific output directory with resolution in path
+
         if resolution == "20m":
             output_dir = Path(f"results/shade/{city}/20m/{mask_name}/metrics")
         else:
             output_dir = Path(f"results/shade/{city}/{mask_name}/metrics")
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         validate_shade_mask(config, mask_name, mask_path, output_dir, resolution)
+
+
+
+def check_file_existence(file_path):
+    if os.path.exists(file_path):
+        print(f"File exists: {file_path}")
+    else:
+        print(f"File does not exist: {file_path}")
+
+
+
 
 
 def main():
     # ‼️ configuration - change these values as needed
-    city_name = "Monterrey1"
-    resolution = "20m"  # "1m" or "20m"
+    city_name = "RiodeJaneiro"
+    resolution = "1m"  # "1m" or "20m"
     
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
