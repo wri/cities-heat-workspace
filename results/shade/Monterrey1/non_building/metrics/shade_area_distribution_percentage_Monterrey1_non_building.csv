@@ -1,0 +1,10 @@
+Time,mask,Class,(Local) Area %,(Global) Area %
+1200D,non_building,Building Shade,7.01,12.88
+1200D,non_building,Tree Shade,16.02,16.01
+1200D,non_building,No Shade,76.97,71.11
+1500D,non_building,Building Shade,1.23,3.58
+1500D,non_building,Tree Shade,17.02,17.14
+1500D,non_building,No Shade,81.76,79.27
+1800D,non_building,Building Shade,14.95,26.32
+1800D,non_building,Tree Shade,16.89,15.12
+1800D,non_building,No Shade,68.16,58.57

@@ -1,0 +1,10 @@
+Time,mask,Class,(Local) Area %,(Global) Area %
+1200D,pedestrian,Building Shade,8.55,12.55
+1200D,pedestrian,Tree Shade,16.32,16.7
+1200D,pedestrian,No Shade,75.13,70.75
+1500D,pedestrian,Building Shade,1.72,2.98
+1500D,pedestrian,Tree Shade,17.81,18.26
+1500D,pedestrian,No Shade,80.47,78.77
+1800D,pedestrian,Building Shade,19.99,25.49
+1800D,pedestrian,Tree Shade,17.48,17.34
+1800D,pedestrian,No Shade,62.52,57.17
