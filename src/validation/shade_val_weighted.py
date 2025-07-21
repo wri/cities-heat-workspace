@@ -100,6 +100,7 @@ def validate_shade_from_config(config):
     weighted_results_global = []
     kappa_results = []
     confusion_results = []
+    area_distribution_results = []
 
     for time, local_path, global_path in zip(base_time_steps, local_shade_paths, global_shade_paths):
         print(f"Processing {time}: {local_path} vs {global_path}")
@@ -152,6 +153,24 @@ def validate_shade_from_config(config):
         conf_mat = confusion_matrix(y_true, y_pred, labels=[0, 1, 2])
         print(f"\n🔍 [{time}] Confusion Matrix:")
         print(pd.DataFrame(conf_mat, index=class_labels, columns=class_labels))
+
+        # Calculate area distribution percentages
+        shade_labels = ["Building Shade", "Tree Shade", "No Shade"]
+        actual_counts = conf_mat.sum(axis=1)  # row sums: local (actual)
+        pred_counts = conf_mat.sum(axis=0)    # col sums: global (predicted)
+        total_actual = actual_counts.sum()
+        total_pred = pred_counts.sum()
+        actual_perc = (actual_counts / total_actual * 100) if total_actual > 0 else np.zeros_like(actual_counts)
+        pred_perc = (pred_counts / total_pred * 100) if total_pred > 0 else np.zeros_like(pred_counts)
+
+        # Save area distribution results for this time step
+        for i, label in enumerate(shade_labels):
+            area_distribution_results.append({
+                "Time": time,
+                "Class": label,
+                "(Local) Area %": round(actual_perc[i], 2),
+                "(Global) Area %": round(pred_perc[i], 2)
+            })
 
         # Weighted by local data (row totals)
         total_pixels_local = conf_mat.sum()
@@ -207,6 +226,7 @@ def validate_shade_from_config(config):
     pd.DataFrame(weighted_results_local).to_csv(output_dir / f"shade_accuracy_weighted_local_{city}.csv", index=False)
     pd.DataFrame(weighted_results_global).to_csv(output_dir / f"shade_accuracy_weighted_global_{city}.csv", index=False)
     pd.DataFrame(confusion_results).to_csv(output_dir / f"shade_confusion_matrix_all_{city}.csv", index=False)
+    pd.DataFrame(area_distribution_results).to_csv(output_dir / f"shade_area_distribution_percentage_{city}.csv", index=False)
     print(f"✅ Shade validation complete for {city}. Results saved to {output_dir.resolve()}")
 
 def main():
