@@ -1,0 +1,10 @@
+Time,mask,Class,User Accuracy,Producer Accuracy,Weight (Global),Weighted User Acc (Global),Weighted Prod Acc (Global)
+1200D,non_building,Building Shade,0.219,0.573,0.1731,0.038,0.0992
+1200D,non_building,Tree Shade,0.843,0.779,0.0916,0.0773,0.0713
+1200D,non_building,No Shade,0.952,0.839,0.7353,0.6999,0.6167
+1500D,non_building,Building Shade,0.019,0.278,0.0463,0.0009,0.0129
+1500D,non_building,Tree Shade,0.882,0.872,0.1021,0.0901,0.089
+1500D,non_building,No Shade,0.986,0.94,0.8516,0.8398,0.8004
+1800D,non_building,Building Shade,0.38,0.713,0.325,0.1235,0.2317
+1800D,non_building,Tree Shade,0.791,0.66,0.0839,0.0664,0.0553
+1800D,non_building,No Shade,0.915,0.745,0.5911,0.541,0.4405
