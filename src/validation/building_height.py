@@ -163,6 +163,7 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
         'local_filtered': local_filtered,
         'global_filtered': global_filtered,
         'height_errors_filtered': height_errors_filtered,
+        'height_errors': height_errors,
         'metrics': metrics_zscore
     }
 
@@ -187,7 +188,7 @@ def main():
         all_configs = yaml.safe_load(f)     
 
     # change the city name based on the city name in city_config.yaml   
-    CITY_NAME = "Monterrey3"
+    CITY_NAME = "RiodeJaneiro"
 
     if CITY_NAME not in all_configs:
         raise ValueError(f"{CITY_NAME} not found in config.")
@@ -223,6 +224,7 @@ def main():
         result['local_filtered'], 
         result['global_filtered'], 
         result['height_errors_filtered'], 
+        result['height_errors'],
         result['metrics'], 
         plots_output_dir
     )
