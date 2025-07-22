@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 
 
-def plot_building_height_validation(city, local_filtered, global_filtered, height_errors_filtered, metrics, output_dir):
+def plot_building_height_validation(city, local_filtered, global_filtered, height_errors_filtered, height_errors,metrics, output_dir):
     r2 = metrics['R²']
 
     # sample data for scatter plot
@@ -72,7 +72,7 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
 
     #print(f"min_val: {min_val}, max_val: {max_val}")
 
-    # histogram of height errors
+    # histogram of height errors with z_score filtered
     plt.figure(figsize=(8, 8))
     max_range = 15  # meters
     clipped_errors = height_errors_filtered[
@@ -92,7 +92,25 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
     plt.close()
 
 
-    print(f"✅ Building height plots generated for {city}. Saved to {output_dir.resolve()}")
+    print(f"✅ Building height plots z_score filtered generated for {city}. Saved to {output_dir.resolve()}")
+
+    # histogram of height errors without z_score filtered
+
+    clipped_height_errors = height_errors[(height_errors >= -max_range) & (height_errors <= max_range)]
+    plt.figure(figsize=(8, 8))
+    plt.hist(clipped_height_errors, bins=100, color='skyblue', edgecolor='gray')
+    plt.axvline(x=0, color='red', linestyle='--', label='No Error')
+    plt.title(f"{city}: Building Height Error")
+    plt.xlabel("Height Error (Global - Local) (m)")
+    plt.ylabel("Pixel Count")
+    plt.xlim(-max_range, max_range) 
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(output_dir / "height_error_histogram_unfiltered.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+    print(f"✅ Building height plots unfilteredgenerated for {city}. Saved to {output_dir.resolve()}")
 
 
 def plot_metrics_comparison(zscore_metrics, unfiltered_metrics, output_dir, city_name):
@@ -138,7 +156,7 @@ def main():
         all_configs = yaml.safe_load(f)
 
     # Change the city name based on the city name in city_config.yaml   
-    CITY_NAME = "Monterrey3"
+    CITY_NAME = "Amsterdam"
 
     if CITY_NAME not in all_configs:
         raise ValueError(f"{CITY_NAME} not found in config.")
