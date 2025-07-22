@@ -63,7 +63,6 @@ def compute_stats(y_true, y_pred):
     }
 
 def validate_utci_from_config(city, local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global, output_dir):
-    # Use the provided paths and output_dir for validation
     print(f"Validating UTCI for {city}")
     
     base_time_steps = [Path(path).stem.split('_')[-1] for path in local_utci_paths]
@@ -133,7 +132,7 @@ def validate_utci_from_config(city, local_utci_paths, global_utci_paths, shade_p
         # shade (building and tree) 
         shade_mask_local = valid_mask & ((shade_data_local == 0) | (shade_data_local == 1))
         shade_mask_global = valid_mask & ((shade_data_global == 0) | (shade_data_global == 1))
-        # Check if there are any valid pixels in both local and global masks
+        # check for valid pixels in both local and global masks
         if np.any(shade_mask_local) and np.any(shade_mask_global):
             y_true_shade = local_data[shade_mask_local].flatten()
             y_pred_shade = global_data[shade_mask_global].flatten()
@@ -176,14 +175,10 @@ def validate_utci_from_config(city, local_utci_paths, global_utci_paths, shade_p
             print(f"⚠️  {time}: No 'Tree Shade' pixels found")
 
         # overlapping shade statistics
-
-        # Define shade type names
         shade_type_names = {0: 'Building Shade', 1: 'Tree Shade', 2: 'No Shade'}
-
-        # Initialize a list to store results
         overlapping_shade_results = []
 
-        # Check for differences in UTCI values for matching shade classes (local vs global)
+        # check for differences in UTCI values for matching shade classes (local vs global)
         for i in range(3):  # local and global shade classes: 0, 1, 2
             class_mask_local = (shade_data_local == i) & valid_mask
             class_mask_global = (shade_data_global == i) & valid_mask
@@ -199,32 +194,30 @@ def validate_utci_from_config(city, local_utci_paths, global_utci_paths, shade_p
                 num_differences = len(non_zero_differences)
                 percentage_differences = round((num_differences / total_pixels) * 100, 4)
                 
-                # Calculate additional statistics
+                # additional stats
                 min_diff = round(np.min(differences), 4)
                 median_diff = round(np.median(differences), 4)
                 max_diff = round(np.max(differences), 4)
                 std_diff = round(np.std(differences), 4)
-                
-                # Calculate percentage of overlapping pixels relative to local shade type
+                mean_diff = round(np.mean(differences), 4)
+
+                # percentage of overlapping pixels relative to local shade type
                 total_local_shade_pixels = np.sum(class_mask_local)
                 percentage_overlapping = round((combined_mask.sum() / total_local_shade_pixels) * 100, 4)
-                
-                # Append results to the list
+
                 overlapping_shade_results.append({
                     'Shade Type': shade_type_names[i],
                     'No Differences (number of pixels)': no_differences,
                     'Percentage Non-zero Differences (%)': percentage_differences,
                     'Percentage Overlapping (%)': percentage_overlapping,
+                    'Mean Difference (local - global)': mean_diff,
                     'Min Difference (local - global)': min_diff,
                     'Median Difference (local - global)': median_diff,
                     'Max Difference (local - global)': max_diff,
                     'Std Difference': std_diff
                 })
 
-        # Convert the list to a DataFrame
         overlapping_shade_df = pd.DataFrame(overlapping_shade_results)
-
-        # Save the DataFrame to a CSV file
         overlapping_shade_df.to_csv(output_dir / f"utci_overlapping_shade_{city}.csv", index=False)
 
         print(f"✅ Overlapping shade results saved to {output_dir / f'utci_overlapping_shade_{city}.csv'}")
@@ -252,31 +245,28 @@ def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
     
-    city_name = "Monterrey3"
+    city_name = "RiodeJaneiro"
     config = {"city": city_name, **all_configs[city_name]}
 
-    # Select paths
+    # select paths
     local_utci_paths = config['utci_local_paths']
     global_utci_paths = config['utci_global_paths']
     shade_paths_local = config['shade_local_paths']
     shade_paths_global = config['shade_global_paths']
 
-    # Debug: Print paths to verify
-    print("Local UTCI Paths:", local_utci_paths)
-    print("Global UTCI Paths:", global_utci_paths)
+    # print("Local UTCI Paths:", local_utci_paths)
+    # print("Global UTCI Paths:", global_utci_paths)
 
-    # Check if any path contains '_20m'
+    # check if any path contains '_20m'
     is_20m = any('_20m' in path for path in local_utci_paths + global_utci_paths)
 
-    # Debug: Print the result of is_20m
-    print("Is 20m data:", is_20m)
+    # print("Is 20m data:", is_20m)
 
-    # Set the output directory
+    # set output directory
     output_dir = Path(f"results/utci/{city_name}/20m/metrics") if is_20m else Path(f"results/utci/{city_name}/metrics")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Debug: Print the output directory
-    print("Output Directory:", output_dir)
+    # print("Output Directory:", output_dir)
 
     # # Check if local files exist, otherwise download from URL
     # for local_path, global_path, shade_path_local, shade_path_global in zip(local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global):
@@ -296,7 +286,6 @@ def main():
     # output_dir = Path(f"results/utci/{city_name}/20m/metrics") if is_20m else Path(f"results/utci/{city_name}/metrics")
     # output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Pass the city name, paths, and output directory to the validation function
     validate_utci_from_config(city_name, local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global, output_dir)
 
 if __name__ == "__main__":
