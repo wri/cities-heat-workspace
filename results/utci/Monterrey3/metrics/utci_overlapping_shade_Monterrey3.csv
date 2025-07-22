@@ -1,4 +1,4 @@
-Shade Type,No Differences (number of pixels),Percentage Non-zero Differences (%),Percentage Overlapping (%),Min Difference (local - global),Median Difference (local - global),Max Difference (local - global),Std Difference
-Building Shade,0,100.0,53.4791,-0.9991,0.0273,0.7315,0.1344
-Tree Shade,0,100.0,67.474,-1.1707,0.0015,1.0175,0.1438
-No Shade,67,99.982,82.2981,-2.1268,-0.0093,2.1149,0.2997
+Shade Type,No Differences (number of pixels),Percentage Non-zero Differences (%),Percentage Overlapping (%),Mean Difference (local - global),Min Difference (local - global),Median Difference (local - global),Max Difference (local - global),Std Difference
+Building Shade,0,100.0,53.4791,0.0195,-0.9991,0.0273,0.7315,0.1344
+Tree Shade,0,100.0,67.474,-0.0046,-1.1707,0.0015,1.0175,0.1438
+No Shade,67,99.982,82.2981,-0.0193,-2.1268,-0.0093,2.1149,0.2997
