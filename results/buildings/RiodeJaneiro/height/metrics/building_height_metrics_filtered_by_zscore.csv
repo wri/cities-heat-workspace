@@ -1,2 +1,0 @@
-City,MAE,R²,Mean_Bias,RMSE,STD,% Overestimation,% Underestimation,Mean_Overestimation,Mean_Underestimation,% Valid Pixels,Filter_Type
-RiodeJaneiro,6.752388954162598,0.2539575695991516,1.690384,17.659634,17.578543,27.056205097623558,20.235832014782282,15.602286,-12.507528,99.86662721723081,Z-score (±3)

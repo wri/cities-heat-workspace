@@ -1,2 +1,0 @@
-City,MAE,R²,Mean_Bias,RMSE,STD,% Overestimation,% Underestimation,Mean_Overestimation,Mean_Underestimation,% Valid Pixels,Filter_Type
-Amsterdam,3.9609014987945557,0.16838127374649048,1.8910714,8.306856,8.088744,29.972795784923306,13.071090242124203,9.762137,-7.917577,100.0,None (all finite data)

@@ -1,0 +1,5 @@
+Filter_Type,MAE,R²,Mean_Bias,RMSE,STD,Mean_Height_Local (m),Mean_Height_Global (m),90th Percentile Error (m),95th Percentile Error (m),Overestimation (%),Underestimation (%),Mean_Overestimation (m),Mean_Underestimation (m),Valid Pixels (%),City
+Unfiltered (all),3.0007,-0.169,0.5069,5.2309,5.2063,3.1027,3.6097,6.0482,8.0144,57.6803,39.4459,3.0406,-3.161,100.0,Monterrey1
+Z-score filtered (all),2.7682,-0.1167,0.6643,4.1983,4.1454,2.9114,3.5757,6.0203,7.9305,58.0227,39.0748,2.9579,-2.6922,99.0113,Monterrey1
+Unfiltered (positive only),4.9524,-0.4459,4.1461,6.3697,4.8355,5.8145,9.9607,8.2657,9.7324,90.7999,9.1996,5.0102,-4.382,34.7475,Monterrey1
+Z-score filtered (positive only),4.769,-0.4503,4.1796,5.4922,3.5631,5.6941,9.8737,8.1884,9.5844,91.0227,8.9768,4.9156,-3.2831,34.5119,Monterrey1

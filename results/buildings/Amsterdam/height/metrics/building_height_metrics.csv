@@ -1,0 +1,5 @@
+Filter_Type,MAE,R²,Mean_Bias,RMSE,STD,Mean_Height_Local (m),Mean_Height_Global (m),90th Percentile Error (m),95th Percentile Error (m),Overestimation (%),Underestimation (%),Mean_Overestimation (m),Mean_Underestimation (m),Valid Pixels (%),City
+Unfiltered (all),3.9609,0.1684,1.8911,8.3069,8.0887,6.3247,8.2157,10.428,17.177,29.9728,13.0711,9.7621,-7.9176,100.0,Amsterdam
+Z-score filtered (all),3.2821,0.4679,1.5048,6.4778,6.3006,6.1713,7.6761,9.23,15.02,28.9667,12.8251,8.2627,-6.929,97.849,Amsterdam
+Unfiltered (positive only),7.5749,-1.0989,5.3053,10.7205,9.3158,16.4329,21.7382,16.017,20.709,77.068,22.9283,8.3563,-4.9493,34.5778,Amsterdam
+Z-score filtered (positive only),6.5971,-0.4898,4.7728,8.5665,7.1137,16.3915,21.1642,14.39,17.958,77.017,22.9792,7.3814,-3.9695,33.3931,Amsterdam
