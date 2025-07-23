@@ -140,11 +140,15 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
     pd.DataFrame(all_metrics).to_csv(output_dir / "building_height_metrics.csv", index=False)
     print(f"✅ Saved all building height metrics for {city} to {output_dir.resolve()}")
 
+    # calculate positive errors unfiltered
+    positive_errors_unfiltered = height_errors[height_errors > 0]
+    
     return {
         "local_filtered": local_vals[z_mask],
         "global_filtered": global_vals[z_mask],
         "height_errors_filtered": height_errors[z_mask],
         "height_errors": height_errors,
+        "positive_errors_unfiltered": positive_errors_unfiltered,
         "metrics": metrics_z_filtered_all
     }
 
@@ -293,7 +297,7 @@ def main():
         all_configs = yaml.safe_load(f)     
 
     # change the city name based on the city name in city_config.yaml   
-    CITY_NAME = "Monterrey3"
+    CITY_NAME = "Amsterdam"
 
     if CITY_NAME not in all_configs:
         raise ValueError(f"{CITY_NAME} not found in config.")
@@ -324,15 +328,21 @@ def main():
     # plots_output_dir = Path(f"results/buildings/{CITY_NAME}/height/graphs")
     # plots_output_dir.mkdir(parents=True, exist_ok=True)
     
-    # plot_building_height_validation(
-    #     CITY_NAME, 
-    #     result['local_filtered'], 
-    #     result['global_filtered'], 
-    #     result['height_errors_filtered'], 
-    #     result['height_errors'],
-    #     result['metrics'], 
-    #     plots_output_dir
-    # )
+    # plots generation
+    # calls plot_building_height_validation from building_height_viz.py
+    plots_output_dir = Path(f"results/buildings/{CITY_NAME}/height/graphs")
+    plots_output_dir.mkdir(parents=True, exist_ok=True)
+    
+    plot_building_height_validation(
+        CITY_NAME, 
+        result['local_filtered'], 
+        result['global_filtered'], 
+        result['height_errors_filtered'], 
+        result['height_errors'],
+        result['positive_errors_unfiltered'],
+        result['metrics'], 
+        plots_output_dir
+    )
 
 
 if __name__ == "__main__":
