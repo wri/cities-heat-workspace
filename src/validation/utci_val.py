@@ -67,6 +67,7 @@ def validate_utci_from_config(city, local_utci_paths, global_utci_paths, shade_p
     
     base_time_steps = [Path(path).stem.split('_')[-1] for path in local_utci_paths]
     stats_results = []
+    overlapping_shade_results = []
     
     for time, local_path, global_path, shade_path_local, shade_path_global in zip(base_time_steps, local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global):
         print(f"Processing {time}: {local_path} vs {global_path}")
@@ -176,7 +177,7 @@ def validate_utci_from_config(city, local_utci_paths, global_utci_paths, shade_p
 
         # overlapping shade statistics
         shade_type_names = {0: 'Building Shade', 1: 'Tree Shade', 2: 'No Shade'}
-        overlapping_shade_results = []
+        
 
         # check for differences in UTCI values for matching shade classes (local vs global)
         for i in range(3):  # local and global shade classes: 0, 1, 2
@@ -206,6 +207,7 @@ def validate_utci_from_config(city, local_utci_paths, global_utci_paths, shade_p
                 percentage_overlapping = round((combined_mask.sum() / total_local_shade_pixels) * 100, 4)
 
                 overlapping_shade_results.append({
+                    'Time': time,
                     'Shade Type': shade_type_names[i],
                     'No Differences (number of pixels)': no_differences,
                     'Percentage Non-zero Differences (%)': percentage_differences,
@@ -254,37 +256,15 @@ def main():
     shade_paths_local = config['shade_local_paths']
     shade_paths_global = config['shade_global_paths']
 
-    # print("Local UTCI Paths:", local_utci_paths)
-    # print("Global UTCI Paths:", global_utci_paths)
 
     # check if any path contains '_20m'
     is_20m = any('_20m' in path for path in local_utci_paths + global_utci_paths)
 
-    # print("Is 20m data:", is_20m)
 
     # set output directory
     output_dir = Path(f"results/utci/{city_name}/20m/metrics") if is_20m else Path(f"results/utci/{city_name}/metrics")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # print("Output Directory:", output_dir)
-
-    # # Check if local files exist, otherwise download from URL
-    # for local_path, global_path, shade_path_local, shade_path_global in zip(local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global):
-    #     if not file_exists_locally(local_path):
-    #         download_from_url(config['utci_local'], local_path)
-    #     if not file_exists_locally(global_path):
-    #         download_from_url(config['utci_global'], global_path)
-    #     if not file_exists_locally(shade_path_local):
-    #         download_from_url(config['shade_local'], shade_path_local)
-    #     if not file_exists_locally(shade_path_global):
-    #         download_from_url(config['shade_global'], shade_path_global)
-
-    # Determine if the paths are for 20m data
-    # is_20m = any('_20m' in path for path in local_utci_paths + global_utci_paths)
-
-    # Set the output directory
-    # output_dir = Path(f"results/utci/{city_name}/20m/metrics") if is_20m else Path(f"results/utci/{city_name}/metrics")
-    # output_dir.mkdir(parents=True, exist_ok=True)
 
     validate_utci_from_config(city_name, local_utci_paths, global_utci_paths, shade_paths_local, shade_paths_global, output_dir)
 

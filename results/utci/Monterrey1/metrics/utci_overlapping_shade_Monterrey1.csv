@@ -1,4 +1,10 @@
-Shade Type,No Differences (number of pixels),Percentage Non-zero Differences (%),Percentage Overlapping (%),Mean Difference (local - global),Min Difference (local - global),Median Difference (local - global),Max Difference (local - global),Std Difference
-Building Shade,6,99.9986,42.4681,-0.007,-0.7646,-0.0029,0.6055,0.1131
-Tree Shade,37,99.9953,74.381,-0.0383,-0.9982,-0.0141,0.9513,0.1134
-No Shade,92,99.998,85.8508,0.0028,-1.2364,-0.0274,1.2818,0.2387
+Time,Shade Type,No Differences (number of pixels),Percentage Non-zero Differences (%),Percentage Overlapping (%),Mean Difference (local - global),Min Difference (local - global),Median Difference (local - global),Max Difference (local - global),Std Difference
+1200,Building Shade,1,99.999,23.8032,-0.1966,-2.016,-0.1035,1.7039,0.4028
+1200,Tree Shade,16,99.9982,87.4351,-0.1351,-3.7709,-0.061,3.6788,0.3881
+1200,No Shade,70,99.9987,91.1976,0.039,-2.9231,0.0256,2.5127,0.307
+1500,Building Shade,1,99.9918,13.0817,-0.0834,-1.319,-0.0521,0.9544,0.1968
+1500,Tree Shade,20,99.998,93.4437,-0.1086,-2.1384,-0.0508,2.0131,0.2702
+1500,No Shade,131,99.9979,96.9124,0.0234,-1.6588,-0.0191,1.6803,0.2839
+1800,Building Shade,6,99.9986,42.4681,-0.007,-0.7646,-0.0029,0.6055,0.1131
+1800,Tree Shade,37,99.9953,74.381,-0.0383,-0.9982,-0.0141,0.9513,0.1134
+1800,No Shade,92,99.998,85.8508,0.0028,-1.2364,-0.0274,1.2818,0.2387
