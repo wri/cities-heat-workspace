@@ -1,6 +1,6 @@
-Filter_Type,MAE,R²,Mean_Bias,RMSE,STD,Mean_Height_Local (m),Mean_Height_Global (m),90th Percentile Error (m),95th Percentile Error (m),Overestimation (%),Underestimation (%),Mean_Overestimation (m),Mean_Underestimation (m),Valid Pixels (%),City
-Unfiltered (all),1.6131,-1.1092,1.2402,3.646,3.4286,1.2846,2.5248,6.0094,8.9136,27.4932,7.7638,5.1891,-2.4012,100.0,Monterrey2
-Z-score filtered (all),1.3933,-0.5683,1.025,3.0501,2.8727,1.2423,2.2673,5.2702,8.18,26.3904,7.8365,4.5818,-2.35,98.4338,Monterrey2
-Absolute results,1.6131,-1.1092,1.2402,3.646,3.4286,1.2846,2.5248,6.0094,8.9136,24.2966,10.9604,5.8719,-1.7009,100.0,Monterrey2
-Unfiltered (positive only),4.8022,-7.3336,4.7342,6.0458,3.7603,5.4785,10.2126,9.0142,11.127,96.6699,3.3301,4.9324,-1.022,20.1703,Monterrey2
-Z-score filtered (positive only),4.279,-5.8767,4.2077,4.9786,2.661,5.4415,9.6493,8.0996,9.25,96.514,3.486,4.3966,-1.022,19.2681,Monterrey2
+Filter_Type,MAE,R²,Mean_Bias,RMSE,STD,Mean_Height_Local (m),Mean_Height_Global (m),90th Percentile Error (m),95th Percentile Error (m),Valid Pixels (%),Mean_Overestimation (m),Mean_Underestimation (m),Overestimation (%),Underestimation (%),City
+Unfiltered (all),1.6131,-1.1092,1.2402,3.646,3.4286,1.2846,2.5248,6.0094,8.9136,100.0,5.1891,-2.4012,27.4932,7.7638,Monterrey2
+Z-score filtered (all),1.3933,-0.5683,1.025,3.0501,2.8727,1.2423,2.2673,5.2702,8.18,98.4338,4.5818,-2.35,26.3904,7.8365,Monterrey2
+Absolute results,1.6131,-1.1092,1.2402,3.646,3.4286,1.2846,2.5248,6.0094,8.9136,100.0,,,,,Monterrey2
+Unfiltered (positive only),4.8022,-7.3336,4.7342,6.0458,3.7603,5.4785,10.2126,9.0142,11.127,20.1703,4.9324,-1.022,96.6699,3.3301,Monterrey2
+Z-score filtered (positive only),4.279,-5.8767,4.2077,4.9786,2.661,5.4415,9.6493,8.0996,9.25,19.2681,4.3966,-1.022,96.514,3.486,Monterrey2

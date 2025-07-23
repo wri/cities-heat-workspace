@@ -51,10 +51,8 @@ def shrink_window(window, n_pixels):
         window.height - 2 * n_pixels
     )
 
-def compute_metrics(name, local, global_, errors, total_pixels_local, total_pixels_global):
-    positive_errors = errors[errors > 0]
-    negative_errors = errors[errors < 0]
-    return {
+def compute_metrics(name, local, global_, errors, total_pixels_local, total_pixels_global, signed = True):
+    metrics = {
         "Filter_Type": name,
         "MAE": round(mean_absolute_error(local, global_), 4),
         "R²": round(r2_score(local, global_), 4),   
@@ -65,14 +63,24 @@ def compute_metrics(name, local, global_, errors, total_pixels_local, total_pixe
         "Mean_Height_Global (m)": round(np.mean(global_), 4),
         "90th Percentile Error (m)": round(np.percentile(errors, 90), 4),
         "95th Percentile Error (m)": round(np.percentile(errors, 95), 4),
-        "Overestimation (%)": round(len(positive_errors) / len(local) * 100, 4),
-        "Underestimation (%)": round(len(negative_errors) / len(local) * 100, 4),
-        "Mean_Overestimation (m)": round(np.mean(positive_errors) if len(positive_errors) > 0 else 0, 4),
-        "Mean_Underestimation (m)": round(np.mean(negative_errors) if len(negative_errors) > 0 else 0, 4),
         "Valid Pixels (%)": round(len(local) / total_pixels_local * 100, 4)
         # "% Valid Pixels Global": round(len(global_) / total_pixels_global * 100, 4),
 
     }
+
+    if signed:
+        positive_errors = errors[errors > 0]
+        negative_errors = errors[errors < 0]
+        metrics.update({
+            "Mean_Overestimation (m)": round(np.mean(positive_errors) if len(positive_errors) > 0 else 0, 4),
+            "Mean_Underestimation (m)": round(np.mean(negative_errors) if len(negative_errors) > 0 else 0, 4),
+            "Overestimation (%)": round(len(positive_errors) / len(local) * 100, 4),
+            "Underestimation (%)": round(len(negative_errors) / len(local) * 100, 4)
+        })
+    
+
+    return metrics
+    
 
 def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, global_dem, output_dir):
     with open_local_raster(local_dsm) as src_ldsm, open_local_raster(global_dsm) as src_gdsm, \
@@ -127,23 +135,23 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
 
     ### There are 4 different sets: unfiltered, z-score filtered, positive differences only, all differences incluidng negative
     # 1. unfiltered - positive & negative values 
-    metrics_unfiltered_all = compute_metrics("Unfiltered (all)", local_vals, global_vals, height_errors, total_pixels_local, total_pixels_global)
+    metrics_unfiltered_all = compute_metrics("Unfiltered (all)", local_vals, global_vals, height_errors, total_pixels_local, total_pixels_global, signed = True)
 
     # 2. unfiltered - positive only
     pos_mask = (local_vals > 0) & (global_vals > 0)
-    metrics_unfiltered_pos = compute_metrics("Unfiltered (positive only)", local_vals[pos_mask], global_vals[pos_mask], height_errors[pos_mask], total_pixels_local, total_pixels_global)
+    metrics_unfiltered_pos = compute_metrics("Unfiltered (positive only)", local_vals[pos_mask], global_vals[pos_mask], height_errors[pos_mask], total_pixels_local, total_pixels_global, signed = True)
 
     # 3. z-score filtered - all
     z_score = (height_errors - np.mean(height_errors)) / np.std(height_errors)
     z_mask = (z_score > -3) & (z_score < 3)
-    metrics_z_filtered_all = compute_metrics("Z-score filtered (all)", local_vals[z_mask], global_vals[z_mask], height_errors[z_mask], total_pixels_local, total_pixels_global)
+    metrics_z_filtered_all = compute_metrics("Z-score filtered (all)", local_vals[z_mask], global_vals[z_mask], height_errors[z_mask], total_pixels_local, total_pixels_global, signed = True)
 
     # 4. z-score filtered - positive only
     final_mask = z_mask & (local_vals > 0) & (global_vals > 0)
-    metrics_z_filtered_pos = compute_metrics("Z-score filtered (positive only)", local_vals[final_mask], global_vals[final_mask], height_errors[final_mask], total_pixels_local, total_pixels_global)
+    metrics_z_filtered_pos = compute_metrics("Z-score filtered (positive only)", local_vals[final_mask], global_vals[final_mask], height_errors[final_mask], total_pixels_local, total_pixels_global, signed = True)
 
     # 5. absolute results
-    metrics_absolute = compute_metrics("Absolute results", absolute_local, absolute_global, absolute_errors, total_pixels_local, total_pixels_global)
+    metrics_absolute = compute_metrics("Absolute results", absolute_local, absolute_global, absolute_errors, total_pixels_local, total_pixels_global, signed = False)
 
     all_metrics = [metrics_unfiltered_all, metrics_z_filtered_all, metrics_absolute, metrics_unfiltered_pos, metrics_z_filtered_pos]
     for m in all_metrics:
@@ -193,7 +201,7 @@ def main():
         all_configs = yaml.safe_load(f)     
 
     # change the city name based on the city name in city_config.yaml   
-    CITY_NAME = "RiodeJaneiro"
+    CITY_NAME = "Monterrey3"
 
     if CITY_NAME not in all_configs:
         raise ValueError(f"{CITY_NAME} not found in config.")

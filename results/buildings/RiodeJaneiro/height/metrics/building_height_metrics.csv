@@ -1,6 +1,6 @@
-Filter_Type,MAE,R²,Mean_Bias,RMSE,STD,Mean_Height_Local (m),Mean_Height_Global (m),90th Percentile Error (m),95th Percentile Error (m),Overestimation (%),Underestimation (%),Mean_Overestimation (m),Mean_Underestimation (m),Valid Pixels (%),City
-Unfiltered (all),8.3866,-0.0089,1.0503,109.169,109.164,11.9175,12.9679,10.65,27.5414,27.1421,20.2203,17.3843,-18.1409,100.0,RiodeJaneiro
-Z-score filtered (all),6.7524,0.254,1.6904,17.6596,17.5785,10.7603,12.4507,10.5432,27.06,27.0562,20.2358,15.6023,-12.5075,99.8666,RiodeJaneiro
-Absolute results,8.3863,-0.0089,1.0497,109.169,109.164,11.9181,12.9679,10.65,27.5414,27.1107,20.2516,17.4027,-18.1135,100.0,RiodeJaneiro
-Unfiltered (positive only),16.1792,-0.0218,6.7557,154.975,154.8278,28.6383,35.394,31.1862,46.1589,72.4805,27.5062,15.8215,-17.1299,34.4793,RiodeJaneiro
-Z-score filtered (positive only),12.5922,0.1476,7.734,24.0131,22.7335,26.3492,34.0832,30.71,44.9302,72.407,27.5797,14.0361,-8.8076,34.3587,RiodeJaneiro
+Filter_Type,MAE,R²,Mean_Bias,RMSE,STD,Mean_Height_Local (m),Mean_Height_Global (m),90th Percentile Error (m),95th Percentile Error (m),Valid Pixels (%),Mean_Overestimation (m),Mean_Underestimation (m),Overestimation (%),Underestimation (%),City
+Unfiltered (all),8.3866,-0.0089,1.0503,109.169,109.164,11.9175,12.9679,10.65,27.5414,100.0,17.384300231933594,-18.140899658203125,27.1421,20.2203,RiodeJaneiro
+Z-score filtered (all),6.7524,0.254,1.6904,17.6596,17.5785,10.7603,12.4507,10.5432,27.06,99.8666,15.602299690246582,-12.507499694824219,27.0562,20.2358,RiodeJaneiro
+Absolute results,8.3863,-0.0089,1.0497,109.169,109.164,11.9181,12.9679,10.65,27.5414,100.0,,,,,RiodeJaneiro
+Unfiltered (positive only),16.1792,-0.0218,6.7557,154.975,154.8278,28.6383,35.394,31.1862,46.1589,34.4793,15.821499824523926,-17.129899978637695,72.4805,27.5062,RiodeJaneiro
+Z-score filtered (positive only),12.5922,0.1476,7.734,24.0131,22.7335,26.3492,34.0832,30.71,44.9302,34.3587,14.036100387573242,-8.807600021362305,72.407,27.5797,RiodeJaneiro
