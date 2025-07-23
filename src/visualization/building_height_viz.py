@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 
 
-def plot_building_height_validation(city, local_filtered, global_filtered, height_errors_filtered, height_errors,metrics, output_dir):
+def plot_building_height_validation(city, local_filtered, global_filtered, height_errors_filtered, height_errors, positive_errors_unfiltered, metrics, output_dir):
     r2 = metrics['R²']
 
     # sample data for scatter plot
@@ -95,7 +95,6 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
     print(f"✅ Building height plots z_score filtered generated for {city}. Saved to {output_dir.resolve()}")
 
     # histogram of height errors without z_score filtered
-
     clipped_height_errors = height_errors[(height_errors >= -max_range) & (height_errors <= max_range)]
     plt.figure(figsize=(8, 8))
     plt.hist(clipped_height_errors, bins=100, color='skyblue', edgecolor='gray')
@@ -110,7 +109,28 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
     plt.savefig(output_dir / "height_error_histogram_unfiltered.png", dpi=300, bbox_inches='tight')
     plt.close()
 
-    print(f"✅ Building height plots unfilteredgenerated for {city}. Saved to {output_dir.resolve()}")
+    print(f"✅ Building height plots unfiltered generated for {city}. Saved to {output_dir.resolve()}")
+
+    # histogram of positive errors unfiltered
+    # plt.figure(figsize=(8, 8))
+    # max_range_positive = 30  # meters
+    # clipped_positive_errors = positive_errors_unfiltered[
+    #     (positive_errors_unfiltered >= 0) & (positive_errors_unfiltered <= max_range_positive)
+    # ]
+
+    # plt.hist(clipped_positive_errors, bins=100, color='skyblue', edgecolor='gray')
+    # plt.axvline(x=0, color='red', linestyle='--', label='No Error')
+    # plt.title(f"{city}: Building Height Positive Errors (Unfiltered)")
+    # plt.xlabel("Height Error (Global - Local) (m)")
+    # plt.ylabel("Pixel Count")
+    # plt.xlim(0, max_range_positive)
+    # plt.grid(True, alpha=0.3)
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.savefig(output_dir / "height_positive_errors_histogram_unfiltered.png", dpi=300, bbox_inches='tight')
+    # plt.close()
+
+    # print(f"✅ Building height positive errors plot generated for {city}. Saved to {output_dir.resolve()}")
 
 
 def plot_metrics_comparison(zscore_metrics, unfiltered_metrics, output_dir, city_name):
