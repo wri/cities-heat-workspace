@@ -112,8 +112,18 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
     total_pixels_global = np.count_nonzero(np.isfinite(height_global))
 
     local_vals = height_local[mask].flatten()
+    print(f"Number of local vals that are negative: {len(local_vals[local_vals < 0])}")
     global_vals = height_global[mask].flatten()
+    print(f"Number of global vals that are negative: {len(global_vals[global_vals < 0])}")
     height_errors = global_vals - local_vals
+
+    print("Min local_vals:", np.min(local_vals), "Max local_vals:", np.max(local_vals))
+    print("Min global_vals:", np.min(global_vals), "Max global_vals:", np.max(global_vals))
+
+    # for absolute results, calculate the absolute difference between local and global
+    absolute_local = np.abs(local_vals)
+    absolute_global = np.abs(global_vals)
+    absolute_errors = absolute_global - absolute_local
 
     ### There are 4 different sets: unfiltered, z-score filtered, positive differences only, all differences incluidng negative
     # 1. unfiltered - positive & negative values 
@@ -132,13 +142,22 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
     final_mask = z_mask & (local_vals > 0) & (global_vals > 0)
     metrics_z_filtered_pos = compute_metrics("Z-score filtered (positive only)", local_vals[final_mask], global_vals[final_mask], height_errors[final_mask], total_pixels_local, total_pixels_global)
 
-    all_metrics = [metrics_unfiltered_all, metrics_z_filtered_all, metrics_unfiltered_pos, metrics_z_filtered_pos]
+    # 5. absolute results
+    metrics_absolute = compute_metrics("Absolute results", absolute_local, absolute_global, absolute_errors, total_pixels_local, total_pixels_global)
+
+    all_metrics = [metrics_unfiltered_all, metrics_z_filtered_all, metrics_absolute, metrics_unfiltered_pos, metrics_z_filtered_pos]
     for m in all_metrics:
         m["City"] = city
+
+
+
 
     # save all metrics to a single csv
     pd.DataFrame(all_metrics).to_csv(output_dir / "building_height_metrics.csv", index=False)
     print(f"✅ Saved all building height metrics for {city} to {output_dir.resolve()}")
+
+    print("Difference in abs local vs local:", np.sum(absolute_local != local_vals))
+    print("Min local:", np.min(local_vals), "Min global:", np.min(global_vals))
 
     # calculate positive errors unfiltered
     positive_errors_unfiltered = height_errors[height_errors > 0]
@@ -152,129 +171,6 @@ def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, gl
         "metrics": metrics_z_filtered_all
     }
 
-# def calculate_building_height_metrics(city, local_dsm, global_dsm, local_dem, global_dem, output_dir):
-    
-#     with open_local_raster(local_dsm) as src_ldsm, open_local_raster(global_dsm) as src_gdsm, \
-#          open_local_raster(local_dem) as src_ldem, open_local_raster(global_dem) as src_gdem:
-
-#         if src_ldsm.transform != src_gdsm.transform or src_ldsm.shape != src_gdsm.shape:
-#             print("🟠 DSM mismatch. Cropping.")
-#             win_ldsm, win_gdsm = get_overlap_window(src_ldsm, src_gdsm)
-#             win_ldsm = shrink_window(win_ldsm, 10)
-#             win_gdsm = shrink_window(win_gdsm, 10)
-#             print(f"DSM Local Window: {win_ldsm}, DSM Global Window: {win_gdsm}")
-#         else:
-#             print("🟢 DSM aligned. Proceeding.")
-#             win_ldsm = win_gdsm = shrink_window(Window(0, 0, src_ldsm.width, src_ldsm.height), 10)
-
-#         dsm_local = src_ldsm.read(1, window=win_ldsm)
-#         dsm_global = src_gdsm.read(1, window=win_gdsm)
-#         print(f"DSM Local Shape: {dsm_local.shape}, DSM Global Shape: {dsm_global.shape}")
-
-#         win_ldem = win_ldsm
-#         win_gdem = win_gdsm
-
-#         dem_local = src_ldem.read(1, window=win_ldem)
-#         dem_global = src_gdem.read(1, window=win_gdem)
-#         print(f"DEM Local Shape: {dem_local.shape}, DEM Global Shape: {dem_global.shape}")
-
-#     # capture only the building pixels (building only dsm - dem)
-#     height_local = dsm_local - dem_local
-#     height_global = dsm_global - dem_global
-
-#     mask = np.isfinite(height_local) & np.isfinite(height_global)
-#     local_vals = height_local[mask].flatten()
-#     global_vals = height_global[mask].flatten()
-
-    
-#     # errors between global and local 
-#     height_errors = global_vals - local_vals
-
-#     # filter outliers using z-score
-#     z_score = (height_errors - np.mean(height_errors)) / np.std(height_errors)
-#     # print("z-score: ", z_score)
-    
-#     valid_mask_zscore = (z_score > -3) & (z_score < 3)
-
-#     # calculate positive/negative metrics
-#     positive_errors = height_errors[height_errors > 0]
-#     negative_errors = height_errors[height_errors < 0]
-
-#     # z-score filtered data
-#     local_filtered = local_vals[valid_mask_zscore]
-#     global_filtered = global_vals[valid_mask_zscore]
-#     height_errors_filtered = height_errors[valid_mask_zscore]
-
-#     positive_errors_filtered = height_errors_filtered[height_errors_filtered > 0]
-#     negative_errors_filtered = height_errors_filtered[height_errors_filtered < 0]
-
-#     # z-score filtered metrics
-#     mae_filtered = mean_absolute_error(local_filtered, global_filtered)
-#     r2_filtered = r2_score(local_filtered, global_filtered)
-#     mean_bias_filtered = np.mean(height_errors_filtered)
-#     std_filtered = np.std(height_errors_filtered)
-#     rmse_filtered = np.sqrt(np.mean(height_errors_filtered**2))
-#     mean_height_local_filtered = np.mean(local_filtered)
-#     mean_height_global_filtered = np.mean(global_filtered)
-
-#     # unfiltered metrics (using all valid finite data)
-#     mae_unfiltered = mean_absolute_error(local_vals, global_vals)
-#     r2_unfiltered = r2_score(local_vals, global_vals)
-#     mean_bias_unfiltered = np.mean(height_errors)
-#     std_unfiltered = np.std(height_errors)
-#     rmse_unfiltered = np.sqrt(np.mean(height_errors**2))
-#     mean_height_local_unfiltered = np.mean(local_vals) 
-#     mean_height_global_unfiltered = np.mean(global_vals)
-
-#     metrics_zscore = {
-#         "City": city,
-#         "MAE": mae_filtered,
-#         "R²": r2_filtered,
-#         "Mean_Bias": mean_bias_filtered,
-#         "RMSE": rmse_filtered,
-#         "STD": std_filtered,
-#         "% Overestimation": len(positive_errors_filtered) / len(local_filtered) * 100,          
-#         "% Underestimation": len(negative_errors_filtered) / len(local_filtered) * 100,
-#         "Mean_Overestimation": np.mean(positive_errors_filtered) if len(positive_errors_filtered) > 0 else 0,
-#         "Mean_Underestimation": np.mean(negative_errors_filtered) if len(negative_errors_filtered) > 0 else 0,
-#         "% Valid Pixels": len(local_filtered)/len(height_local.flatten())*100,
-#         #"% Valid Pixels Global": len(global_filtered)/len(height_global.flatten())*100,
-#         "Filter_Type": "Z-score (±3)",
-#         "Mean_Height_Local": mean_height_local_filtered,
-#         "Mean_Height_Global": mean_height_global_filtered
-#     }
-
-#     metrics_unfiltered = {
-#         "City": city,
-#         "MAE": mae_unfiltered,
-#         "R²": r2_unfiltered,
-#         "Mean_Bias": mean_bias_unfiltered,
-#         "RMSE": rmse_unfiltered,
-#         "STD": std_unfiltered,
-#         "% Overestimation": len(positive_errors) / len(local_vals) * 100,
-#         "% Underestimation": len(negative_errors) / len(local_vals) * 100,
-#         "Mean_Overestimation": np.mean(positive_errors) if len(positive_errors) > 0 else 0,
-#         "Mean_Underestimation": np.mean(negative_errors) if len(negative_errors) > 0 else 0,
-#         "% Valid Pixels": len(local_vals)/len(height_local.flatten())*100,
-#         #% Valid Pixels Global": len(global_vals)/len(height_global.flatten())*100,
-#         "Filter_Type": "None (all finite data)",
-#         "Mean_Height_Local": mean_height_local_unfiltered,
-#         "Mean_Height_Global": mean_height_global_unfiltered
-#     }
-
-#     # save metrics to csv
-#     pd.DataFrame([metrics_zscore]).to_csv(output_dir / "building_height_metrics_filtered_by_zscore.csv", index=False)
-#     pd.DataFrame([metrics_unfiltered]).to_csv(output_dir / "building_height_metrics_unfiltered.csv", index=False)
-    
-#     print(f"✅ Building height metrics calculated for {city}. Results saved to {output_dir.resolve()}")
-    
-#     return {
-#         'local_filtered': local_filtered,
-#         'global_filtered': global_filtered,
-#         'height_errors_filtered': height_errors_filtered,
-#         'height_errors': height_errors,
-#         'metrics': metrics_zscore
-#     }
 
 # check if files exist locally
 def file_exists_locally(file_path):
@@ -297,7 +193,7 @@ def main():
         all_configs = yaml.safe_load(f)     
 
     # change the city name based on the city name in city_config.yaml   
-    CITY_NAME = "Amsterdam"
+    CITY_NAME = "RiodeJaneiro"
 
     if CITY_NAME not in all_configs:
         raise ValueError(f"{CITY_NAME} not found in config.")
