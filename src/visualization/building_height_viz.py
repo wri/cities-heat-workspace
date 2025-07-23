@@ -7,7 +7,11 @@ import yaml
 
 
 def plot_building_height_validation(city, local_filtered, global_filtered, height_errors_filtered, height_errors, positive_errors_unfiltered, metrics, output_dir):
-    r2 = metrics['R²']
+    # r2 = metrics['R²']
+
+    city_name = city
+    if city_name == "RiodeJaneiro":
+        city_name = "Rio de Janeiro"
 
     # sample data for scatter plot
     sample_fraction = 0.1  # 10% sample
@@ -38,7 +42,7 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
     plt.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5, label='1:1 line') # reference line
     m, b = np.polyfit(local_sampled, global_sampled, 1) # line of best fit
     plt.plot(local_sampled, m * local_sampled + b, color="red", label=f"y = {m:.2f}x + {b:.2f}")
-    plt.title(f"{city}: Global vs Local Building Height (Z-score < ±3)")
+    plt.title(f"{city_name}: Global vs Local Building Height (Z-score < ±3)")
     # plt.text(0.05, 0.95, f"$R^2$ = {r2:.3f}", transform=plt.gca().transAxes, # r2 value
     #          fontsize=10, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.7))
     plt.xlabel("Local (LiDAR) Building Height (m)")
@@ -57,7 +61,7 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
     plt.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5, label='1:1 line') # reference line
     m, b = np.polyfit(local_sampled, global_sampled, 1) # line of best fit
     plt.plot(local_sampled, m * local_sampled + b, color="red", label=f"y = {m:.2f}x + {b:.2f}")
-    plt.title(f"{city}: Global vs Local Building Height (Z-score < ±3)")
+    plt.title(f"{city_name}: Global vs Local Building Height (Z-score < ±3)")
     # plt.text(0.05, 0.95, f"$R^2$ = {r2:.3f}", transform=plt.gca().transAxes, # r2 value
     #          fontsize=10, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.7))
     plt.xlabel("Local (LiDAR) Building Height (m)")
@@ -81,7 +85,7 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
 
     plt.hist(clipped_errors, bins=100, color='skyblue', edgecolor='gray')
     plt.axvline(x=0, color='red', linestyle='--', label='No Error')
-    plt.title(f"{city}: Building Height Error (Z-score < ±3)")
+    plt.title(f"{city_name}: Building Height Error (Z-score < ±3)")
     plt.xlabel("Height Error (Global - Local) (m)")
     plt.ylabel("Pixel Count")
     plt.xlim(-max_range, max_range)
@@ -99,7 +103,7 @@ def plot_building_height_validation(city, local_filtered, global_filtered, heigh
     plt.figure(figsize=(8, 8))
     plt.hist(clipped_height_errors, bins=100, color='skyblue', edgecolor='gray')
     plt.axvline(x=0, color='red', linestyle='--', label='No Error')
-    plt.title(f"{city}: Building Height Error")
+    plt.title(f"{city_name}: Building Height Error")
     plt.xlabel("Height Error (Global - Local) (m)")
     plt.ylabel("Pixel Count")
     plt.xlim(-max_range, max_range) 
