@@ -168,3 +168,9 @@ pyproject.toml
 
 ##
 .DS_Store
+
+## pulled from main but not needed in this branch
+functions/
+scripts/
+data/ 
+notebooks/
