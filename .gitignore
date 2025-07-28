@@ -161,3 +161,10 @@ cython_debug/
 
 # data geotiff
 .tif/
+
+# poetry
+poetry.lock
+pyproject.toml
+
+##
+.DS_Store
