@@ -1,0 +1,170 @@
+Monterrey1:
+  dsm_path: /Users/hyejijoh/Desktop/mty/cif_dsm_ground_build.tif
+  dem_path: /Users/hyejijoh/Desktop/mty/cif_dem.tif
+  dsm: null
+  dem: null
+  shade:
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/Shadow_2023_172_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/Shadow_2023_172_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/Shadow_2023_172_1800D.tif
+  shade_paths:
+  - /Users/hyejijoh/Desktop/mty/global/Shadow_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty/global/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty/global/Shadow_2023_172_1800D.tif
+  utci_paths:
+  - /Users/hyejijoh/Desktop/mty/global/UTCI_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty/global/UTCI_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty/global/UTCI_2023_172_1800D.tif
+  # mask_paths:
+  #   pedestrian_mask: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/scenarios/aoi/mitras_centro/baseline/pedestrian_areas.tif
+  #   pedestrian_mask_path: /Users/hyejijoh/Desktop/mty/pedestrian_areas.tif
+  #   land_use_mask: null
+  #   land_use_mask_path: /Users/hyejijoh/Desktop/mty/cif_lulc_mty.tif
+
+Monterrey2:
+  dsm: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/cif_dsm_ground_build.tif
+  dsm_path: /Users/hyejijoh/Desktop/mty2/global/cif_dsm_ground_build.tif
+  dem: https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/cif_dem.tif
+  dem_path: /Users/hyejijoh/Desktop/mty2/global/cif_dem.tif
+  shade: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/Shadow_2023_172_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/Shadow_2023_172_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/Shadow_2023_172_1800D.tif
+  shade_paths:
+  - /Users/hyejijoh/Desktop/mty2/global/Shadow_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty2/global/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty2/global/Shadow_2023_172_1800D.tif
+  utci: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/UTCI_2023_172_1200.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/UTCI_2023_172_1500.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/MEX-Monterrey/mty2/global/UTCI_2023_172_1800.tif
+  utci_paths:
+  - /Users/hyejijoh/Desktop/mty2/global/UTCI_2023_172_1200.tif
+  - /Users/hyejijoh/Desktop/mty2/global/UTCI_2023_172_1500.tif
+  - /Users/hyejijoh/Desktop/mty2/global/UTCI_2023_172_1800.tif
+  # mask_paths:
+  #   pedestrian_mask: null
+  #   land_use_mask: null
+  #   land_use_mask_path: /Users/hyejijoh/Desktop/mty2/mty2_lulc_binary.tif
+
+
+Monterrey3:
+  dsm: null
+  dsm_path: /Users/hyejijoh/Desktop/mty3/global/cif_dsm_ground_build.tif
+  dem: null
+  dem_path: /Users/hyejijoh/Desktop/mty3/global/cif_dem.tif
+  shade: 
+  shade_paths:
+  - /Users/hyejijoh/Desktop/mty3/global/Shadow_2023_172_1200D.tif
+  - /Users/hyejijoh/Desktop/mty3/global/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/mty3/global/Shadow_2023_172_1800D.tif
+  utci: null
+  utci_paths:
+  - /Users/hyejijoh/Desktop/mty3/global/UTCI_2023_172_1200.tif
+  - /Users/hyejijoh/Desktop/mty3/global/UTCI_2023_172_1500.tif
+  - /Users/hyejijoh/Desktop/mty3/global/UTCI_2023_172_1800.tif
+  # mask_paths:
+  #   pedestrian_mask: null
+  #   land_use_mask_path: /Users/hyejijoh/Desktop/mty3/mty3_lulc_binary.tif
+
+
+RiodeJaneiro:
+  dsm_path: /Users/hyejijoh/Desktop/rdj/cif_dsm_ground_build.tif
+  dem_path: /Users/hyejijoh/Desktop/rdj/cif_dem.tif
+  shade:
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/Shadow_2022_365_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/Shadow_2022_365_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/Shadow_2022_365_1800D.tif
+  shade_paths:
+  - /Users/hyejijoh/Desktop/rdj/global/Shadow_2022_365_1200D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/Shadow_2022_365_1500D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/Shadow_2022_365_1800D.tif
+  utci:
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/UTCI_2022_365_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/UTCI_2022_365_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/BRA-Rio_de_janeiro/scenarios/aoi/low_emission_zone/baseline/UTCI_2022_365_1800D.tif
+  utci_paths:
+  - /Users/hyejijoh/Desktop/rdj/global/UTCI_2022_365_1200D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/UTCI_2022_365_1500D.tif
+  - /Users/hyejijoh/Desktop/rdj/global/UTCI_2022_365_1800D.tif
+  # mask_paths:
+  #   pedestrian_mask: null
+  #   pedestrian_mask_path: /Users/hyejijoh/Desktop/rdj/pedestrian-area.tif
+  #   land_use_mask: null
+  #   land_use_mask_path: /Users/hyejijoh/Desktop/rdj/cif_lulc_rio.tif
+
+
+CapeTown:
+  dsm: https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/cif_dsm_ground_build.tif
+  dem: https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/cif_dem.tif
+  dsm_path: null
+  dem_path: null
+  shade: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/Shadow_2023_1_1200D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/Shadow_2023_172_1500D.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/Shadow_2023_172_1800D.tif
+  shade_paths:
+  - /Users/hyejijoh/Desktop/capetown/global/Shadow_2023_1_1200D.tif
+  - /Users/hyejijoh/Desktop/capetown/global/Shadow_2023_172_1500D.tif
+  - /Users/hyejijoh/Desktop/capetown/global/Shadow_2023_172_1800D.tif
+  utci: 
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/UTCI_2023_1_1200.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/UTCI_2023_172_1500.tif
+  - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/UTCI_2023_172_1800.tif
+  utci_paths:
+  - /Users/hyejijoh/Desktop/capetown/global/UTCI_2023_1_1200.tif
+  - /Users/hyejijoh/Desktop/capetown/global/UTCI_2023_172_1500.tif
+  - /Users/hyejijoh/Desktop/capetown/global/UTCI_2023_172_1800.tif
+  # mask_paths:
+  #   land_use_mask: null
+  #   land_use_mask_path: null
+  #   pedestrian_mask: null
+  #   pedestrian_mask_path: null
+
+Amsterdam:
+  dsm: null
+  dsm_path: /Users/hyejijoh/Desktop/amsterdam/global/cif_dsm_ground_build.tif
+  dem: null
+  dem_path: /Users/hyejijoh/Desktop/amsterdam/global/cif_dem.tif
+  shade: null
+  shade_paths: 
+  - /Users/hyejijoh/Desktop/amsterdam/global/Shadow_2023_189_1200D.tif
+  - /Users/hyejijoh/Desktop/amsterdam/global/Shadow_2023_189_1500D.tif
+  - /Users/hyejijoh/Desktop/amsterdam/global/Shadow_2023_189_1800D.tif
+  utci: null
+  utci_paths:
+  - /Users/hyejijoh/Desktop/amsterdam/global/UTCI_2023_189_1200.tif
+  - /Users/hyejijoh/Desktop/amsterdam/global/UTCI_2023_189_1500.tif
+  - /Users/hyejijoh/Desktop/amsterdam/global/UTCI_2023_189_1800.tif
+  # mask_paths:
+  #   land_use_mask: null
+  #   land_use_mask_path: /Users/hyejijoh/Desktop/amsterdam/ams_lulc_binary.tif
+  #   pedestrian_mask: null
+  #   pedestrian_mask_path: null
+
+
+Bhopal:
+  dsm_path: /Users/hyejijoh/Desktop/bhopal/cif_dsm_ground_build.tif
+  dem_path: /Users/hyejijoh/Desktop/bhopal/cif_dem.tif
+  dsm: null
+  dem: null
+  shade_paths: 
+  - /Users/hyejijoh/Desktop/bhopal/shade_1200_baseline.tif
+  - /Users/hyejijoh/Desktop/bhopal/shade_1500_baseline.tif
+  - /Users/hyejijoh/Desktop/bhopal/shade_1800_baseline.tif
+  shade: null
+  utci_paths: 
+  - /Users/hyejijoh/Desktop/bhopal/utci_1200_baseline.tif
+  - /Users/hyejijoh/Desktop/bhopal/utci_1500_baseline.tif
+  - /Users/hyejijoh/Desktop/bhopal/utci_1800_baseline.tif
+  utci: null
+
+Singapore:
+  dsm_path:
+  dem_path:
+  dsm: null
+  dem: null
+  shade_paths: null
+  shade: null
+  utci_paths: null
+  utci: null
