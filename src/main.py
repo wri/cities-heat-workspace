@@ -24,15 +24,22 @@ def get_highest_and_lowest_points(dsm_path, dem_path):
         dsm_crs = src_dsm.crs
         dem_crs = src_dem.crs
 
+    # only leave the building heights in the dsm
+    dsm_data = dsm_data - dem_data
+    
+    # filter only for heights greater than 0
+    valid_mask = (dsm_data > 0) & (~np.isnan(dsm_data))
+    dsm_data_filtered = dsm_data[valid_mask]
+    
     # dsm
-    tallest_bldg = np.max(dsm_data)
+    tallest_bldg = np.max(dsm_data_filtered)
     tallest_bldg_location = np.where(dsm_data == tallest_bldg)
     # get one random location from the array of min and max
     random_idx = np.random.randint(0, len(tallest_bldg_location[0]))
     tallest_bldg_location = (tallest_bldg_location[0][random_idx], tallest_bldg_location[1][random_idx])
 
-    lowest_bldg = np.min(dsm_data)
-    lowest_bldg_location = np.where(dsm_data == lowest_bldg)
+    lowest_bldg = np.min(dsm_data_filtered)
+    lowest_bldg_location = np.where(dsm_data == lowest_bldg) #use dsm_data for pixel location (2D array)
  
     random_idx = np.random.randint(0, len(lowest_bldg_location[0]))
     lowest_bldg_location = (lowest_bldg_location[0][random_idx], lowest_bldg_location[1][random_idx])
@@ -71,17 +78,17 @@ def get_highest_and_lowest_points(dsm_path, dem_path):
             
     return {
         "tallest_bldg": tallest_bldg,
-        "tallest_bldg_pixel" : tallest_bldg_location,
-        "tallest_bldg_coords": tallest_bldg_coords,
+        "tallest_bldg_pixel" : f"{int(tb_row)},{int(tb_col)}",
+        "tallest_bldg_coords": f"{float(tallest_bldg_coords[0]):.2f},{float(tallest_bldg_coords[1]):.2f}",
         "lowest_bldg": lowest_bldg, 
-        "lowest_bldg_pixel": lowest_bldg_location,
-        "lowest_bldg_coords": lowest_bldg_coords,
+        "lowest_bldg_pixel": f"{int(lb_row)},{int(lb_col)}",
+        "lowest_bldg_coords": f"{float(lowest_bldg_coords[0]):.2f},{float(lowest_bldg_coords[1]):.2f}",
         "highest_ground": highest_ground,
-        "highest_ground_pixel": highest_ground_location,
-        "highest_ground_coords": highest_ground_coords,
+        "highest_ground_pixel": f"{int(hg_row)},{int(hg_col)}",
+        "highest_ground_coords": f"{float(highest_ground_coords[0]):.2f},{float(highest_ground_coords[1]):.2f}",
         "lowest_ground": lowest_ground,
-        "lowest_ground_pixel": lowest_ground_location,
-        "lowest_ground_coords": lowest_ground_coords,
+        "lowest_ground_pixel": f"{int(lg_row)},{int(lg_col)}",
+        "lowest_ground_coords": f"{float(lowest_ground_coords[0]):.2f},{float(lowest_ground_coords[1]):.2f}",
         "dem_crs": dem_crs,
         "dsm_crs": dsm_crs
     }
@@ -96,6 +103,7 @@ def main():
     output_dir.mkdir(parents = True, exist_ok = True)
 
     results = []
+    main_results = []
 
     for city_name, city_config in all_configs.items():
         print(f"\n==========Proecessing {city_name}==================")
@@ -132,8 +140,22 @@ def main():
             "Lowest Ground (coords)": metrics["lowest_ground_coords"]
         })
 
-    df = pd.DataFrame(results)
-    df.to_csv(output_dir / "higest_lowest.csv", index = False)
+        main_results.append({
+            "City": city_name,
+            "CRS": metrics["dem_crs"],
+            "Tallest Building (m)": metrics["tallest_bldg"],
+            "Lowest Building (m)": metrics["lowest_bldg"],
+            "Building Difference (m)": metrics["tallest_bldg"] - metrics["lowest_bldg"],
+            "Highest Ground (m)": metrics["highest_ground"],
+            "Lowest Ground (m)": metrics["lowest_ground"],
+            "Ground Difference (m)": metrics["highest_ground"] - metrics["lowest_ground"]
+        })
+
+    metrics_df = pd.DataFrame(results)
+    metrics_df.to_csv(output_dir / "highest_lowest.csv", index = False)
+
+    main_metrics_df = pd.DataFrame(main_results)
+    main_metrics_df.to_csv(output_dir / "difference_metrics.csv", index = False)
 
     print("✅ Complete")
 
