@@ -174,3 +174,6 @@ functions/
 scripts/
 data/ 
 notebooks/
+
+## ignore numbers files
+.numbers
