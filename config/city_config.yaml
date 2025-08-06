@@ -97,8 +97,8 @@ RiodeJaneiro:
 CapeTown:
   dsm: https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/cif_dsm_ground_build.tif
   dem: https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/cif_dem.tif
-  dsm_path: null
-  dem_path: null
+  dsm_path: /Users/hyejijoh/Desktop/capetown/global/cif_dsm_ground_build.tif
+  dem_path: /Users/hyejijoh/Desktop/capetown/global/cif_dem.tif
   shade: 
   - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/Shadow_2023_1_1200D.tif
   - https://wri-cities-heat.s3.us-east-1.amazonaws.com/ZAF-Cape_Town/validation/global/Shadow_2023_172_1500D.tif
