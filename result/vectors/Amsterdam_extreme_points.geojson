@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "Amsterdam_extreme_points",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::32631" } },
+"features": [
+{ "type": "Feature", "properties": { "point_type": "tallest_building", "height": 71.529999 }, "geometry": { "type": "Point", "coordinates": [ 629475.132028515916318, 5802631.750022088177502 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building", "height": 0.96 }, "geometry": { "type": "Point", "coordinates": [ 630426.132028515916318, 5804612.750022088177502 ] } },
+{ "type": "Feature", "properties": { "point_type": "tallest_building_ground", "height": 74.790001 }, "geometry": { "type": "Point", "coordinates": [ 629348.132028515916318, 5802671.750022088177502 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building_ground", "height": -1.5 }, "geometry": { "type": "Point", "coordinates": [ 629457.132028515916318, 5803372.750022088177502 ] } },
+{ "type": "Feature", "properties": { "point_type": "highest_ground", "height": 14.26 }, "geometry": { "type": "Point", "coordinates": [ 628927.132028515916318, 5804251.750022088177502 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_ground", "height": -1.5 }, "geometry": { "type": "Point", "coordinates": [ 629458.132028515916318, 5803389.750022088177502 ] } }
+]
+}

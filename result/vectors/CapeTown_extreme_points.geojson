@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "CapeTown_extreme_points",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::32734" } },
+"features": [
+{ "type": "Feature", "properties": { "point_type": "tallest_building", "height": 429.47 }, "geometry": { "type": "Point", "coordinates": [ 261717.97437314860872, 6243972.099823622964323 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building", "height": 0.39999962 }, "geometry": { "type": "Point", "coordinates": [ 261814.974373148637824, 6243578.099823622964323 ] } },
+{ "type": "Feature", "properties": { "point_type": "tallest_building_ground", "height": 437.26001 }, "geometry": { "type": "Point", "coordinates": [ 261718.97437314860872, 6243971.099823622964323 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building_ground", "height": 0.0 }, "geometry": { "type": "Point", "coordinates": [ 262613.974373148637824, 6244623.099823622964323 ] } },
+{ "type": "Feature", "properties": { "point_type": "highest_ground", "height": 163.31 }, "geometry": { "type": "Point", "coordinates": [ 260728.97437314860872, 6244251.099823622964323 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_ground", "height": 0.0 }, "geometry": { "type": "Point", "coordinates": [ 262441.974373148637824, 6244623.099823622964323 ] } }
+]
+}

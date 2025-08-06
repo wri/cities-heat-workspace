@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "RiodeJaneiro_extreme_points",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::32723" } },
+"features": [
+{ "type": "Feature", "properties": { "point_type": "tallest_building", "height": 438.29999 }, "geometry": { "type": "Point", "coordinates": [ 687731.176341988844797, 7465459.811643926426768 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building", "height": 1.9699998 }, "geometry": { "type": "Point", "coordinates": [ 687549.176341988844797, 7465125.811643926426768 ] } },
+{ "type": "Feature", "properties": { "point_type": "tallest_building_ground", "height": 444.57999 }, "geometry": { "type": "Point", "coordinates": [ 687729.176341988844797, 7465487.811643926426768 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building_ground", "height": 0.0 }, "geometry": { "type": "Point", "coordinates": [ 687678.176341988844797, 7466304.811643926426768 ] } },
+{ "type": "Feature", "properties": { "point_type": "highest_ground", "height": 68.779999 }, "geometry": { "type": "Point", "coordinates": [ 686226.176341988844797, 7464612.811643926426768 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_ground", "height": 0.0 }, "geometry": { "type": "Point", "coordinates": [ 687480.176341988844797, 7466305.811643926426768 ] } }
+]
+}

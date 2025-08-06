@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "Bhopal_extreme_points",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::32643" } },
+"features": [
+{ "type": "Feature", "properties": { "point_type": "tallest_building", "height": 35.509949 }, "geometry": { "type": "Point", "coordinates": [ 745722.427050826488994, 2571100.978469101246446 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building", "height": 2.3699951 }, "geometry": { "type": "Point", "coordinates": [ 744253.427050826488994, 2572603.978469101246446 ] } },
+{ "type": "Feature", "properties": { "point_type": "tallest_building_ground", "height": 600.84003 }, "geometry": { "type": "Point", "coordinates": [ 743883.427050826488994, 2571922.978469101246446 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building_ground", "height": 500.16 }, "geometry": { "type": "Point", "coordinates": [ 747158.427050826488994, 2569864.978469101246446 ] } },
+{ "type": "Feature", "properties": { "point_type": "highest_ground", "height": 594.23999 }, "geometry": { "type": "Point", "coordinates": [ 743811.427050826488994, 2571749.978469101246446 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_ground", "height": 500.16 }, "geometry": { "type": "Point", "coordinates": [ 747171.427050826488994, 2569865.978469101246446 ] } }
+]
+}

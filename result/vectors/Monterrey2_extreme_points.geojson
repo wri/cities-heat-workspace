@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "Monterrey2_extreme_points",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::32614" } },
+"features": [
+{ "type": "Feature", "properties": { "point_type": "tallest_building", "height": 44.609985 }, "geometry": { "type": "Point", "coordinates": [ 359337.464183797943406, 2847802.617432585451752 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building", "height": 2.5100098 }, "geometry": { "type": "Point", "coordinates": [ 359312.464183797943406, 2847604.617432585451752 ] } },
+{ "type": "Feature", "properties": { "point_type": "tallest_building_ground", "height": 703.82001 }, "geometry": { "type": "Point", "coordinates": [ 359305.464183797943406, 2847786.617432585451752 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_building_ground", "height": 624.04999 }, "geometry": { "type": "Point", "coordinates": [ 360199.464183797943406, 2848107.617432585451752 ] } },
+{ "type": "Feature", "properties": { "point_type": "highest_ground", "height": 694.09003 }, "geometry": { "type": "Point", "coordinates": [ 359199.464183797943406, 2847091.617432585451752 ] } },
+{ "type": "Feature", "properties": { "point_type": "lowest_ground", "height": 624.04999 }, "geometry": { "type": "Point", "coordinates": [ 360199.464183797943406, 2848107.617432585451752 ] } }
+]
+}

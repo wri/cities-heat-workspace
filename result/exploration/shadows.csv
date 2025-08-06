@@ -1,0 +1,8 @@
+City,Highest building within the AOI (m),Longest shadow here at 1800 (m),Note,,
+Monterrey1,159,220,,,
+Monterrey2,44,57,,,
+Monterrey3,26,28,"Highest building is at the boundary of AOI-buffer, shadow partly casts towards AOI",,
+RiodeJaneiro,438,300 and more,Shadow is cut at the boundary of the AOI-buffer.,,
+CapeTown,,,,,
+Amsterdam,72,60,Highest point sits right outside of AOI-buffer boundary. The shadow is cast towards the AOI.,,
+Bhopal,35,75,,,
