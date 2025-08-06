@@ -8,6 +8,8 @@ from rasterio.io import MemoryFile
 from pathlib import Path
 import requests
 import yaml
+import geopandas as gpd
+from shapely.geometry import Point
 
 """
 1)check higest and lowest points (pixel value) from the building-DSM and also retrieve the pixel location
@@ -102,6 +104,14 @@ def get_highest_and_lowest_points(dsm_path, dem_path):
     highest_ground_coords = rasterio.transform.xy(dem_transform, hg_row, hg_col, offset='center')
     lowest_ground_coords = rasterio.transform.xy(dem_transform, lg_row, lg_col, offset='center')
 
+    # point geometries for vector export
+    tallest_bldg_point = Point(tallest_bldg_coords[0], tallest_bldg_coords[1])
+    lowest_bldg_point = Point(lowest_bldg_coords[0], lowest_bldg_coords[1])
+    tallest_bldg_ground_point = Point(tb_row_ground_coords, tb_col_ground_coords)
+    lowest_bldg_ground_point = Point(lb_row_ground_coords, lb_col_ground_coords)
+    highest_ground_point = Point(highest_ground_coords[0], highest_ground_coords[1])
+    lowest_ground_point = Point(lowest_ground_coords[0], lowest_ground_coords[1])
+
     print(
           f"Tallest building: {tallest_bldg}m at {tallest_bldg_location}.\n"
           f"Lowest building: {lowest_bldg}m at {lowest_bldg_location}.\n"
@@ -137,7 +147,13 @@ def get_highest_and_lowest_points(dsm_path, dem_path):
         "dsm_area": dsm_area,
         "dem_width": dem_width,
         "dem_height": dem_height,
-        "dem_area": dem_area
+        "dem_area": dem_area,
+        "tallest_bldg_point": tallest_bldg_point,
+        "lowest_bldg_point": lowest_bldg_point,
+        "tallest_bldg_ground_point": tallest_bldg_ground_point,
+        "lowest_bldg_ground_point": lowest_bldg_ground_point,
+        "highest_ground_point": highest_ground_point,
+        "lowest_ground_point": lowest_ground_point
     }
 
 
@@ -146,7 +162,7 @@ def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
     
-    output_dir = Path(f"result/height/metrics")
+    output_dir = Path(f"result/metrics")
     output_dir.mkdir(parents = True, exist_ok = True)
 
     results = []
@@ -178,6 +194,46 @@ def main():
             "DSM/DEM size (w x h)": f"{metrics['dsm_width']} x {metrics['dsm_height']}",
             "DSM/DEM area (sq m)": metrics["dsm_area"]
         })
+
+        # point vector for extreme points
+        extreme_points_data = [
+            {
+                'point_type': 'tallest_building',
+                'height': metrics["tallest_bldg"],
+                'geometry': metrics["tallest_bldg_point"]
+            },
+            {
+                'point_type': 'lowest_building', 
+                'height': metrics["lowest_bldg"],
+                'geometry': metrics["lowest_bldg_point"]
+            },
+            {
+                'point_type': 'tallest_building_ground',
+                'height': metrics["tallest_bldg_ground"],
+                'geometry': metrics["tallest_bldg_ground_point"]
+            },
+            {
+                'point_type': 'lowest_building_ground',
+                'height': metrics["lowest_bldg_ground"], 
+                'geometry': metrics["lowest_bldg_ground_point"]
+            },
+            {
+                'point_type': 'highest_ground',
+                'height': metrics["highest_ground"],
+                'geometry': metrics["highest_ground_point"]
+            },
+            {
+                'point_type': 'lowest_ground',
+                'height': metrics["lowest_ground"],
+                'geometry': metrics["lowest_ground_point"]
+            }
+        ]
+        
+        # save points as geojson
+        gdf = gpd.GeoDataFrame(extreme_points_data, crs=metrics["dem_crs"])
+        vector_output_dir = Path(f"result/vectors/")
+        vector_output_dir.mkdir(parents=True, exist_ok=True)
+        gdf.to_file(vector_output_dir / f"{city_name}_extreme_points.geojson", driver='GeoJSON')
 
         results.append({
             "City": city_name,
