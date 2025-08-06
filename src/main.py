@@ -14,8 +14,6 @@ import yaml
 2)do the same for DEMs
 3)save the metrics as a quick .csv"""
 
-# TODO: ⚠️ add building points WITH the ground elevation as well.
-
 
 def get_highest_and_lowest_points(dsm_path, dem_path):
     with rasterio.open(dsm_path) as src_dsm, rasterio.open(dem_path) as src_dem:
@@ -25,6 +23,17 @@ def get_highest_and_lowest_points(dsm_path, dem_path):
         dem_transform = src_dem.transform
         dsm_crs = src_dsm.crs
         dem_crs = src_dem.crs
+        
+        # get raster metadata
+        dsm_width = src_dsm.width
+        dsm_height = src_dsm.height
+        dsm_bounds = src_dsm.bounds
+        dsm_area = (dsm_bounds.right - dsm_bounds.left) * (dsm_bounds.top - dsm_bounds.bottom)
+        
+        dem_width = src_dem.width
+        dem_height = src_dem.height
+        dem_bounds = src_dem.bounds
+        dem_area = (dem_bounds.right - dem_bounds.left) * (dem_bounds.top - dem_bounds.bottom)
 
     # only leave the building heights in the dsm
     dsm_bldg_data = dsm_data - dem_data
@@ -122,7 +131,13 @@ def get_highest_and_lowest_points(dsm_path, dem_path):
         "lowest_ground_pixel": f"{int(lg_row)},{int(lg_col)}",
         "lowest_ground_coords": f"{float(lowest_ground_coords[0]):.2f},{float(lowest_ground_coords[1]):.2f}",
         "dem_crs": dem_crs,
-        "dsm_crs": dsm_crs
+        "dsm_crs": dsm_crs,
+        "dsm_width": dsm_width,
+        "dsm_height": dsm_height,
+        "dsm_area": dsm_area,
+        "dem_width": dem_width,
+        "dem_height": dem_height,
+        "dem_area": dem_area
     }
 
 
@@ -136,6 +151,7 @@ def main():
 
     results = []
     main_results = []
+    raster_metadata_results = []
 
     for city_name, city_config in all_configs.items():
         print(f"\n==========Proecessing {city_name}==================")
@@ -154,6 +170,14 @@ def main():
             continue
 
         metrics = get_highest_and_lowest_points(dsm_path, dem_path)
+
+        # add raster metadata
+        raster_metadata_results.append({
+            "City": city_name,
+            "CRS": metrics["dem_crs"],
+            "DSM/DEM size (w x h)": f"{metrics['dsm_width']} x {metrics['dsm_height']}",
+            "DSM/DEM area (sq m)": metrics["dsm_area"]
+        })
 
         results.append({
             "City": city_name,
@@ -197,6 +221,9 @@ def main():
 
     main_metrics_df = pd.DataFrame(main_results)
     main_metrics_df.to_csv(output_dir / "difference_metrics.csv", index = False)
+
+    raster_metadata_df = pd.DataFrame(raster_metadata_results)
+    raster_metadata_df.to_csv(output_dir / "raster_metadata.csv", index = False)
 
     print("✅ Complete")
 
