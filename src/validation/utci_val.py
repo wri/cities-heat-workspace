@@ -247,7 +247,7 @@ def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
     
-    city_name = "RiodeJaneiro"
+    city_name = "Monterrey3_DST"
     config = {"city": city_name, **all_configs[city_name]}
 
     # select paths

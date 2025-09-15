@@ -8,21 +8,21 @@ import glob
 
 ## UTC offset is difference from GMT. Enter a positive or negative integer of 24 hr time.
 ## 200 = 2:00 offset. -800 = -8:00 offset. 545 = 5:45 offset.
-utc_offset = -600
+utc_offset = -700
 
 ## folder for MRT rasters
 ## MRT rasters within dir MUST be in solweig format: Tmrt_[year]_[day of year]_[local time][letter].tif
-mrt_dir = "/Users/hyejijoh/Desktop/mty2/local/"
+mrt_dir = "/Users/hyejijoh/Desktop/mty3/local_dst/"
 
 ## text file of meteorology data
 ## this can be created from ERA5 reanalysis using the met_preprocessing file
 ## must contain: 'time' (date & time in utc), 'temp' (air temperature in C), 
 ## 'wind' (wind speed in m/s), 'vpd' (vapor pressure deficit in hPa)
 
-met_file = "/Users/hyejijoh/Desktop/mty2/local/metforcing.txt"
+met_file = "/Users/hyejijoh/Desktop/mty3/local_dst/metforcing.txt"
 
 ## folder to save UTCI output files
-out_dir = "/Users/hyejijoh/Desktop/mty2/local/"
+out_dir = "/Users/hyejijoh/Desktop/mty3/local_dst/"
 
 
 ############ FUNCTIONS ############
