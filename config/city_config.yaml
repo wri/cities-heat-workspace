@@ -281,14 +281,26 @@ Amsterdam:
 
 Monterrey1_DST:
   shade_local_paths: null 
-  shade_global_paths: null 
+  shade_global_paths: 
+  - /Users/hyejijoh/Desktop/mty/global_dst/Shadow_2024_130_1200D.tif
+  - /Users/hyejijoh/Desktop/mty/global_dst/Shadow_2024_130_1500D.tif
+  - /Users/hyejijoh/Desktop/mty/global_dst/Shadow_2024_130_1800D.tif
   utci_local_paths: null 
-  utci_global_paths: null 
+  utci_global_paths: 
+  - /Users/hyejijoh/Desktop/mty/global_dst/UTCI_2024_130_1200.tif
+  - /Users/hyejijoh/Desktop/mty/global_dst/UTCI_2024_130_1500.tif
+  - /Users/hyejijoh/Desktop/mty/global_dst/UTCI_2024_130_1800.tif
 
 Monterrey2_DST:
-  shade_local_paths: null 
+  shade_local_paths: 
+  - /Users/hyejijoh/Desktop/mty2/local_dst/Shadow_2024_130_1200D.tif
+  - /Users/hyejijoh/Desktop/mty2/local_dst/Shadow_2024_130_1500D.tif
+  - /Users/hyejijoh/Desktop/mty2/local_dst/Shadow_2024_130_1800D.tif
   shade_global_paths: null 
-  utci_local_paths: null 
+  utci_local_paths: 
+  - /Users/hyejijoh/Desktop/mty2/local_dst/UTCI_2024_130_1200.tif
+  - /Users/hyejijoh/Desktop/mty2/local_dst/UTCI_2024_130_1500.tif
+  - /Users/hyejijoh/Desktop/mty2/local_dst/UTCI_2024_130_1800.tif
   utci_global_paths: null 
 
 Monterrey3_DST:
