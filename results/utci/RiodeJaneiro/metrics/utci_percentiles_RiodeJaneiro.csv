@@ -1,0 +1,4 @@
+Time,Mean Absolute Error,Minimum Absolute Error,Maximum Absolute Error,90th percentile,95th percentile
+1200,1.0254,0.0,9.6849,5.9989,7.9459
+1500,0.8883,0.0,8.3811,3.918,6.0245
+1800,0.4916,0.0,3.1157,2.3921,2.5696

@@ -1,21 +1,21 @@
-import os
 import rasterio
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import yaml
-from sklearn.metrics import mean_absolute_error, r2_score
 from rasterio.windows import from_bounds, Window
 from rasterio.coords import BoundingBox
 from rasterio.warp import transform_bounds
-import requests
 """
 1) for each city, for each time stamp, calculate absolute error for each pixel and save as a numpy array
-2) concatenate arrays of each timestamp across different cities and calculate 90th and 95th percentile of the absolute error
-3) save as a csv file
+2) calculate 90th and 95th percentile of the absolute error for each city and save per-city results
+3) concatenate arrays of each timestamp across different cities and calculate aggregate 90th and 95th percentile
+4) save both per-city and aggregate results as csv files
 ❗️ This does not take into account the different shade clusters. e.g. a pixel could be classified as "building" in local but "tree" in global. 
 It's rather a global performance summary
 
+Per-city results saved to: results/utci/{city_name}/metrics/utci_percentiles_{city_name}.csv
+Aggregate results saved to: results/utci/percentile/metrics/utci_all_percentiles.csv
 """
 
 
@@ -63,11 +63,10 @@ def shrink_window(window, n_pixels):
 #         'Std Pred (global)': round(np.std(y_pred), 4)
 #     }
 
-def validate_utci_from_config(city, local_utci_paths, global_utci_paths, all_absolute_errors_by_time):
+def validate_utci_from_config(city, local_utci_paths, global_utci_paths, all_absolute_errors_by_time, city_errors_by_time):
     print(f"Validating UTCI for {city}")
     
     base_time_steps = [Path(path).stem.split('_')[-1] for path in local_utci_paths]
-    stats_results = []
     
     for time, local_path, global_path in zip(base_time_steps, local_utci_paths, global_utci_paths):
         print(f"Processing {time}: {local_path} vs {global_path}")
@@ -110,17 +109,19 @@ def validate_utci_from_config(city, local_utci_paths, global_utci_paths, all_abs
         # all area 
         y_true = local_data[valid_mask].flatten()
         y_pred = global_data[valid_mask].flatten()
-        # stats = compute_stats(y_true, y_pred)
-        # stats_results.append({'Time': time, 'Mask': 'Whole Area', **stats})
 
         # absolute error per timestamp
         abs_errors = np.abs(y_true - y_pred)
 
+        # store for aggregate results (all cities combined)
         if time not in all_absolute_errors_by_time:
             all_absolute_errors_by_time[time] = []
         all_absolute_errors_by_time[time].append(abs_errors)
 
-        # not saving per cities metrics
+        # store for per-city results
+        if time not in city_errors_by_time:
+            city_errors_by_time[time] = []
+        city_errors_by_time[time].append(abs_errors)
     
 
 
@@ -128,9 +129,9 @@ def main():
     with open("config/city_config.yaml", "r") as f:
         all_configs = yaml.safe_load(f)
 
-        # set output directory
-    output_dir = Path(f"results/utci/percentile/metrics")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # set output directory for aggregate results
+    aggregate_output_dir = Path("results/utci/percentile/metrics")
+    aggregate_output_dir.mkdir(parents=True, exist_ok=True)
     all_absolute_errors_by_time = {}
 
     for city_name, city_config in all_configs.items():
@@ -145,10 +146,36 @@ def main():
         local_utci_paths = city_config['utci_local_paths']
         global_utci_paths = city_config['utci_global_paths']
 
-        validate_utci_from_config(city_name, local_utci_paths, global_utci_paths, all_absolute_errors_by_time)
+        # create per-city error dictionary
+        city_errors_by_time = {}
 
-    # compute and save percentiles after all cities are run
-    print("Computing absolute error percentiles...")
+        # validate and collect errors
+        validate_utci_from_config(city_name, local_utci_paths, global_utci_paths, all_absolute_errors_by_time, city_errors_by_time)
+
+        # compute and save per-city percentiles
+        if city_errors_by_time:
+            city_records = []
+            for time_step, errors_list in city_errors_by_time.items():
+                errors = np.concatenate(errors_list)
+                record = {        
+                    'Time': time_step,
+                    'Mean Absolute Error': round(np.mean(errors), 4),
+                    'Minimum Absolute Error': round(np.min(errors), 4),
+                    'Maximum Absolute Error': round(np.max(errors), 4),
+                    '90th percentile': round(np.percentile(errors, 90), 4),
+                    '95th percentile': round(np.percentile(errors, 95), 4)
+                }
+                city_records.append(record)
+
+            # save per-city results
+            city_output_dir = Path(f"results/utci/{city_name}/metrics")
+            city_output_dir.mkdir(parents=True, exist_ok=True)
+            city_df = pd.DataFrame(city_records)
+            city_df.to_csv(city_output_dir / f"utci_percentiles_{city_name}.csv", index=False)
+            print(f"✅ Saved per-city percentiles to {city_output_dir / f'utci_percentiles_{city_name}.csv'}")
+
+    # compute and save aggregate percentiles after all cities are run
+    print("\n======= Computing aggregate absolute error percentiles across all cities =======")
     
     records = []
     for time_step, errors_list in all_absolute_errors_by_time.items():
@@ -164,7 +191,8 @@ def main():
         records.append(record)
 
     summary_df = pd.DataFrame(records)
-    summary_df.to_csv(output_dir / "utci_all_percentiles.csv", index=False)
+    summary_df.to_csv(aggregate_output_dir / "utci_all_percentiles.csv", index=False)
+    print(f"✅ Saved aggregate percentiles to {aggregate_output_dir / 'utci_all_percentiles.csv'}")
 
     
     print("\n ✅ All cities processed and percentiles metrics saved.")
