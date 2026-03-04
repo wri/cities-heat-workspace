@@ -1,0 +1,161 @@
+---
+title: "Untitled"
+format: docx
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+library(terra)
+
+# -------------------------------
+# 📁 Step 1: Define base paths and file names
+# -------------------------------
+
+# Base directory containing tile folders
+base_path <- "C:/Users/Lincoln.Chanakira/OneDrive - World Resources Institute/Documents/WRI/Assignment 2/ZAF-Cape_Town-tile_2000m-baseline/ZAF-Cape_Town-tile_2000m-baseline_baseline_v1/primary_data/raster_files"
+
+# List of tile folder names
+tile_folders <- c("tile_001", "tile_002", "tile_003", "tile_004")
+
+# List of raster layers to analyze
+layer_names <- c(
+  "cif_dem.tif",
+  "cif_dsm_ground_build.tif",
+  "cif_lulc.tif",
+  "cif_open_urban.tif",
+  "cif_tree_canopy.tif"
+)
+
+# -------------------------------
+# 🔁 Step 2: Loop through each raster layer
+# -------------------------------
+for (layer in layer_names) {
+  cat("\n============================================\n")
+  cat(paste("📂 LAYER:", layer), "\n")
+  cat("============================================\n")
+  
+  # Load all 4 tiles for this raster layer
+  tiles <- lapply(tile_folders, function(folder) {
+    rast(file.path(base_path, folder, layer))
+  })
+  
+  # -------------------------------
+  # 🔁 Step 3: Compare overlaps between tile pairs
+  # -------------------------------
+  for (i in 1:(length(tiles) - 1)) {
+    t1 <- tiles[[i]]
+    t2 <- tiles[[i + 1]]
+    name1 <- tile_folders[i]
+    name2 <- tile_folders[i + 1]
+    
+    # Get overlapping extent
+    ov_ext <- intersect(ext(t1), ext(t2))
+    
+    if (!is.null(ov_ext)) {
+      # Crop both rasters to their shared overlap area
+      ov1 <- crop(t1, ov_ext)
+      ov2 <- crop(t2, ov_ext)
+      
+      # Resample tile 2 to match tile 1 (ensures same resolution/grid)
+      ov2_aligned <- resample(ov2, ov1)
+      
+      # Calculate RMSE between the two overlapping tile sections
+      rmse <- sqrt(mean((values(ov1) - values(ov2_aligned))^2, na.rm = TRUE))
+      
+      # Print RMSE result
+      cat(paste0("🔍 ", name1, " vs ", name2, " → RMSE: ", round(rmse, 4), "\n"))
+      
+      # -------------------------------
+      # 🖼️ Step 4: Plot the comparison
+      # -------------------------------
+      plot(
+        c(ov1, ov2_aligned, ov1 - ov2_aligned),
+        main = c(
+          paste("Overlap from", name1, "-", layer),
+          paste("Overlap from", name2, "(aligned) -", layer),
+          paste("Difference:", name1, "-", name2)
+        )
+      )
+      
+    } else {
+      cat(paste0("⚠️ No overlap found between ", name1, " and ", name2, "\n"))
+    }
+  }
+}
+
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+```{r}
+library(terra)
+
+# -------------------------------
+# 📁 Step 1: Define inputs
+# -------------------------------
+tile_folders <- c("tile_001", "tile_002", "tile_003", "tile_004")
+layer_names <- c(
+  "cif_dem.tif",
+  "cif_dsm_ground_build.tif",
+  "cif_lulc.tif",
+  "cif_open_urban.tif",
+  "cif_tree_canopy.tif"
+)
+
+# Base paths
+tile_base <- "C:/Users/Lincoln.Chanakira/OneDrive - World Resources Institute/Documents/WRI/Assignment 2/ZAF-Cape_Town-tile_2000m-baseline/ZAF-Cape_Town-tile_2000m-baseline_baseline_v1/primary_data/raster_files"
+untiled_path <- "C:/Users/Lincoln.Chanakira/OneDrive - World Resources Institute/Documents/WRI/Assignment 2/ZAF-Cape_Town-untiled-baseline/ZAF-Cape_Town-untiled-baseline_baseline_v1/primary_data/raster_files/tile_001"
+
+buffer_m <- 100
+
+# -------------------------------
+# 🔁 Step 2: Loop over all layers
+# -------------------------------
+for (layer in layer_names) {
+  cat("\n============================================\n")
+  cat(paste("🔍 Comparing stitched tiles vs full for:", layer), "\n")
+  cat("============================================\n")
+
+  # 1. Load and buffer all tiles
+  trimmed_tiles <- lapply(tile_folders, function(folder) {
+    r <- rast(file.path(tile_base, folder, layer))
+    e <- ext(r)
+    crop(r, ext(xmin(e) + buffer_m, xmax(e) - buffer_m, ymin(e) + buffer_m, ymax(e) - buffer_m))
+  })
+  
+  # 2. Stitch all buffered tiles
+  stitched <- do.call(mosaic, trimmed_tiles)
+
+  # 3. Load full untiled raster
+  full_raster <- rast(file.path(untiled_path, layer))
+
+  # 4. Crop full raster to stitched extent
+  full_crop <- crop(full_raster, ext(stitched))
+
+  # 5. Align both rasters
+  full_aligned <- resample(full_crop, stitched)
+
+  # 6. Calculate RMSE
+  rmse <- sqrt(mean((values(stitched) - values(full_aligned))^2, na.rm = TRUE))
+  cat(paste("✅ RMSE:", round(rmse, 4), "\n"))
+
+  # 7. Plot
+  plot(c(stitched, full_aligned, stitched - full_aligned),
+       main = c("Stitched Tiles", "Full Raster", "Difference"))
+}
+
+```

@@ -1,0 +1,182 @@
+---
+title: "combining data tiled at size : 2000"
+author: "Lincoln.chanakira@wri.org"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+**Visualize the edges of the tiles**
+
+This lets you **see if the tiles overlap, have gaps, or align perfectly.**
+
+```{r}
+library(terra)
+
+# Your folders
+folders <- c(
+  "C:/Users/Lincoln.Chanakira/OneDrive - World Resources Institute/Documents/WRI/ZAF-Cape_Town-tiled_2000-baseline_baseline_v1/primary_data/raster_files/tile_001",
+  "C:/Users/Lincoln.Chanakira/OneDrive - World Resources Institute/Documents/WRI/ZAF-Cape_Town-tiled_2000-baseline_baseline_v1/primary_data/raster_files/tile_002",
+  "C:/Users/Lincoln.Chanakira/OneDrive - World Resources Institute/Documents/WRI/ZAF-Cape_Town-tiled_2000-baseline_baseline_v1/primary_data/raster_files/tile_003",
+  "C:/Users/Lincoln.Chanakira/OneDrive - World Resources Institute/Documents/WRI/ZAF-Cape_Town-tiled_2000-baseline_baseline_v1/primary_data/raster_files/tile_004"
+)
+# Collect all .tif files from these folders
+tile_files <- unlist(lapply(folders, function(f) {
+  list.files(f, pattern = "\\.tif$", full.names = TRUE)
+}))
+
+length(tile_files)  # sanity check
+
+```
+
+```{r}
+library(terra)
+# List all .tif files from these folders
+tile_files <- unlist(lapply(folders, function(f) {
+  list.files(f, pattern = "\\.tif$", full.names = TRUE)
+}))
+
+# Load tiles as SpatRasters
+tiles <- lapply(tile_files, rast)
+
+# Convert raster extents to polygons (edges)
+ext_polys <- lapply(tiles, function(x) as.polygons(ext(x)))
+extents_vect <- do.call(rbind, ext_polys)
+
+# Plot all tile edges
+plot(extents_vect, col=NA, border="red", lwd=2, main="Tile edges (2000m)")
+
+```
+
+**Combining the tiles into one raster file**
+
+```{r}
+library(terra)
+
+
+
+# List of raster filenames to merge
+file_names <- c(
+  "cif_dem.tif",
+  "cif_tree_canopy.tif",
+  "cif_open_urban.tif",
+  "cif_lulc.tif",
+  "cif_dsm_ground_build.tif"
+)
+
+# Output directory
+output_folder <- "C:/Users/Lincoln.Chanakira/OneDrive - World Resources Institute/Documents/WRI/ZAF-Cape_Town-tiled_2000-baseline_baseline_v1/primary_data/main_raster"
+
+# Loop to merge each raster
+for (fname in file_names) {
+  
+  # Build full paths for this file in all folders
+  layer_files <- file.path(folders, fname)
+  
+  # Load rasters
+  rasters <- lapply(layer_files, rast)
+  
+  # Merge into one raster
+  merged_raster <- do.call(merge, rasters)
+  
+  # Write to disk
+  out_name <- paste0("merged_", tools::file_path_sans_ext(fname), ".tif")
+  out_path <- file.path(output_folder, out_name)
+  
+  writeRaster(merged_raster, out_path, overwrite=TRUE)
+  
+  cat("✅ Merged file written to:", out_path, "\n")
+}
+
+
+```
+
+**Split merged raster using original tile boundaries**
+
+```{r}
+# Define your base folders with original tiles
+tile_folders <- c(
+  "C:/.../tile_001",
+  "C:/.../tile_002",
+  "C:/.../tile_003",
+  "C:/.../tile_004"
+)
+#Define the raster files all 5
+ile_names <- c(
+  "cif_dem.tif",
+  "cif_tree_canopy.tif",
+  "cif_open_urban.tif",
+  "cif_lulc.tif",
+  "cif_dsm_ground_build.tif"
+)
+
+library(terra)
+
+# Define your base folders with original tiles
+tile_folders <- c(
+  "C:/.../tile_001",
+  "C:/.../tile_002",
+  "C:/.../tile_003",
+  "C:/.../tile_004"
+)
+
+# Define the raster file names (all 5)
+file_names <- c(
+  "cif_dem.tif",
+  "cif_tree_canopy.tif",
+  "cif_open_urban.tif",
+  "cif_lulc.tif",
+  "cif_dsm_ground_build.tif"
+)
+
+# Path to merged versions
+merged_dir <- "C:/.../primary_data"
+
+# Output base folder
+output_base <- "C:/.../tiled_outputs"
+
+# Loop over each raster type
+for (fname in file_names) {
+  
+  # Load the merged version
+  merged_path <- file.path(merged_dir, paste0("merged_", fname))
+  merged_raster <- rast(merged_path)
+  
+  # Loop over tile folders
+  for (tile_id in seq_along(tile_folders)) {
+    tile_folder <- tile_folders[tile_id]
+    original_tile_path <- file.path(tile_folder, fname)
+    
+    # Check if the tile exists
+    if (file.exists(original_tile_path)) {
+      original_tile <- rast(original_tile_path)
+      
+      # Crop the merged raster using the original extent
+      cropped_tile <- crop(merged_raster, ext(original_tile))
+      
+      # Optional: mask with original tile if needed
+      # cropped_tile <- mask(cropped_tile, original_tile)
+      
+      # Save cropped tile with same name
+      out_folder <- file.path(output_base, fname, paste0("tile_", sprintf("%03d", tile_id)))
+      dir.create(out_folder, recursive = TRUE, showWarnings = FALSE)
+      out_path <- file.path(out_folder, fname)
+      
+      writeRaster(cropped_tile, out_path, overwrite = TRUE)
+      cat("✅ Wrote:", out_path, "\n")
+    }
+  }
+}
+
+```
